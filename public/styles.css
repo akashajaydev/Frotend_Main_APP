@@ -1,0 +1,38 @@
+:root {
+  --theme: #FF5722;
+  --theme-semi-lighten: #ffa589;
+  --theme-lighten: #FFCCBC;
+}
+
+.text-theme {
+  color: var(--theme)
+}
+
+.bg-theme {
+  background-color: var(--theme)
+}
+
+.bg-theme-lighten {
+  background-color: var(--theme-lighten)
+}
+
+article {
+  max-width: 800px;
+  margin-inline: auto;
+}
+
+a {
+  color: var(--theme);
+  text-decoration: none;
+  font-weight: bold;
+}
+
+a:not([href]), a:not([href]):hover {
+  color: rgb(140, 140, 140);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--theme);
+  text-decoration: underline;
+}
