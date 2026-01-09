@@ -48,7 +48,7 @@ const handleAuth = () => {
           <span>or use your email password</span>
           <input type="email" placeholder="Email">
           <input type="password" placeholder="Password">
-          <a href="#">Forget Your Password?</a>
+          <NuxtLink to="/forgot-password">Forget Your Password?</NuxtLink>
           <button>Sign In</button>
         </form>
       </div>
@@ -93,9 +93,9 @@ const handleAuth = () => {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
   position: relative;
   overflow: hidden;
-  width: 768px;
+  width: 1000px;
   max-width: 100%;
-  min-height: 480px;
+  min-height: 600px;
 }
 
 .auth-container p {
