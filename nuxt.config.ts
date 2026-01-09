@@ -2,7 +2,7 @@ import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-	devtools: { enabled: true },
+  devtools: { enabled: true },
   build: {
     transpile: ['vuetify']
   },
@@ -28,14 +28,14 @@ export default defineNuxtConfig({
       },
     },
   },
-	nitro: {
-		prerender: {
-			failOnError: false
-		}
-	},
-	// experimental: {
-	// 	renderJsonPayloads: false
-	// },
+  nitro: {
+    prerender: {
+      failOnError: false
+    }
+  },
+  // experimental: {
+  // 	renderJsonPayloads: false
+  // },
   app: {
     head: {
       title: 'XtrasZone Admin Panel',
@@ -43,6 +43,10 @@ export default defineNuxtConfig({
         {
           rel: 'shortcut icon',
           href: '/logo.svg'
+        },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap'
         },
         {
           href: '/bootstrap.min.css',

@@ -69,7 +69,7 @@ function apiCallXhr(api: string, options = defaultApiOptions): Promise<ApiRespon
 			let json: any = xhr.responseText
 			try {
 				json = JSON.parse(xhr.responseText)
-			} catch (error) {}
+			} catch (error) { }
 
 			if (statusCode === 401) {
 				localStorage.removeItem('admin-token')
@@ -125,6 +125,18 @@ async function fetchProfile() {
 	if (!token) {
 		return navigateTo('/login')
 	}
+
+	// Mock auth for development/demo
+	if (token === 'dummy-token') {
+		const data = useDataStore()
+		data.admin = {
+			_id: 'mock-id',
+			name: 'Demo Admin',
+			email: 'demo@example.com'
+		}
+		return
+	}
+
 	const data = useDataStore()
 	const { ok, json, statusCode } = await helpers.apiCall('/admin/profile')
 	if (!ok && statusCode === 401) {
