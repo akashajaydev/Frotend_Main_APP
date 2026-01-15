@@ -132,7 +132,8 @@ async function fetchProfile() {
 		data.admin = {
 			_id: 'mock-id',
 			name: 'Demo Admin',
-			email: 'demo@example.com'
+			email: 'demo@example.com',
+			role: 'super-admin' // Change to 'admin' to test admin view
 		}
 		return
 	}

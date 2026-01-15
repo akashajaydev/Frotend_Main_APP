@@ -20,6 +20,8 @@ export interface Admin {
   _id: string
   name: string
   email: string
+  role: 'super-admin' | 'admin'
+  type?: string // e.g. 'Baba', 'Astrologer'
 }
 
 export interface User {
