@@ -172,7 +172,7 @@ const recentOrders = [
                     </v-table>
                     <v-divider></v-divider>
                     <v-card-actions class="justify-center pa-2">
-                        <v-btn variant="text" color="primary" size="small" append-icon="mdi-arrow-right">View All Orders</v-btn>
+                        <v-btn variant="text" color="primary" size="small" append-icon="mdi-arrow-right" @click="navigateTo('/orders')">View All Orders</v-btn>
                     </v-card-actions>
                 </v-card>
             </v-col>
