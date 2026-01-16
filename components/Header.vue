@@ -1,137 +1,61 @@
 <script setup lang="ts">
+import { useUIStore } from '~/stores/ui'
 import adminAvatar from '~/assets/images/admin.png'
 
-let drawer = ref(false)
-let route = useRoute()
 const data = useDataStore()
+const ui = useUIStore()
+const route = useRoute()
 
 onMounted(() => {
 	helpers.fetchProfile()
 })
 
 function toggleDrawer() {
-	drawer.value = !drawer.value
+	ui.toggleDrawer()
 }
 
 function goto(path: string) {
 	navigateTo(path)
-	drawer.value = false
 }
 </script>
 
 <template>
-	<v-layout>
-		<v-main style="height: 70px">
-			<header class="d-flex justify-between align-center px-8 custom-header text-white">
+	<header class="d-flex justify-between align-center px-8 custom-header text-white">
 
-				<v-btn @click="toggleDrawer" icon="mdi-menu" size="small" variant="text" color="white"
-					class="ms-2"></v-btn>
-				<NuxtLink href="/" title="XtrasZone Admin Panel">
-					<img src="/logo.svg" alt="Site Logo" class="logo" />
-				</NuxtLink>
+		<v-btn @click="toggleDrawer" icon="mdi-menu" size="small" variant="text" color="white"
+			class="ms-2"></v-btn>
+		<NuxtLink href="/" title="XtrasZone Admin Panel">
+			<img src="/logo.svg" alt="Site Logo" class="logo" />
+		</NuxtLink>
 
-				<div class="menu h-100 d-flex align-center">
-					<template v-if="data.admin">
-						<v-menu location="bottom end" transition="scale-transition">
-							<template v-slot:activator="{ props }">
-								<v-btn v-bind="props" variant="text" class="text-capitalize px-2 d-flex align-center"
-									height="48" rounded="xl">
-									<v-avatar size="32" class="me-2">
-										<v-img :src="adminAvatar" alt="Admin"></v-img>
-									</v-avatar>
-									<span class="text-white font-weight-medium d-none d-sm-block">{{ data.admin.name
-										}}</span>
-									<v-icon icon="mdi-chevron-down" size="small" color="white" class="ms-1"></v-icon>
-								</v-btn>
-							</template>
-
-							<v-list density="compact" rounded="xl" elevation="3" class="mt-2 py-2">
-								<v-list-item prepend-icon="mdi-account" title="Profile" value="profile"
-									@click="goto('/profile')" active-color="primary" />
-								<v-divider class="my-1"></v-divider>
-								<v-list-item prepend-icon="mdi-logout" title="Logout" value="logout"
-									@click="helpers.logout" color="error" />
-							</v-list>
-						</v-menu>
+		<div class="menu h-100 d-flex align-center">
+			<template v-if="data.admin">
+				<v-menu location="bottom end" transition="scale-transition">
+					<template v-slot:activator="{ props }">
+						<v-btn v-bind="props" variant="text" class="text-capitalize px-2 d-flex align-center"
+							height="48" rounded="xl">
+							<v-avatar size="32" class="me-2">
+								<v-img :src="adminAvatar" alt="Admin"></v-img>
+							</v-avatar>
+							<span class="text-white font-weight-medium d-none d-sm-block">{{ data.admin.name
+								}}</span>
+							<v-icon icon="mdi-chevron-down" size="small" color="white" class="ms-1"></v-icon>
+						</v-btn>
 					</template>
 
-					<NuxtLink v-else href="/login" :class="{ active: route.path === '/login' }">Login</NuxtLink>
-				</div>
-			</header>
-		</v-main>
-		<v-navigation-drawer v-model="drawer" temporary class="components-drawer rounded-e-xl" elevation="5">
-			<div class="pa-4 text-center">
-				<v-avatar size="80" color="-lighten-4" class="mb-3">
-					<v-img v-if="data.admin" :src="adminAvatar" alt="Admin"></v-img>
-					<v-icon v-else icon="mdi-account" size="40" color="darken-2"></v-icon>
-				</v-avatar>
-				<h3 class="text-h6 font-weight-bold text-darken-3 mb-1">{{ data.admin ? data.admin.name : 'Guest'
-					}}</h3>
-				<p class="text-caption text-grey">Welcome back!</p>
-			</div>
+					<v-list density="compact" rounded="xl" elevation="3" class="mt-2 py-2">
+						<v-list-item prepend-icon="mdi-account" title="Profile" value="profile"
+							@click="goto('/profile')" active-color="primary" />
+						<v-divider class="my-1"></v-divider>
+						<v-list-item prepend-icon="mdi-logout" title="Logout" value="logout"
+							@click="helpers.logout" color="error" />
+					</v-list>
+				</v-menu>
+			</template>
 
-			<v-divider class="mb-2"></v-divider>
-
-			<v-list density="comfortable" nav class="px-3">
-				<template v-if="data.admin">
-					<!-- Super Admin Menu -->
-					<template v-if="data.admin.role === 'super-admin'">
-
-
-						<v-list-item prepend-icon="mdi-account-group" title="Admins" value="admins"
-							:active="route.path === '/' || route.path.startsWith('/admins')" @click="goto('/')"
-							active-class="bg-black text-white" rounded="xl" class="mb-1" />
-						<v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" value="dashboard"
-							:active="route.path === '/dashboard'" @click="goto('/dashboard')"
-							active-class="bg-black text-white" rounded="xl" class="mb-1" />
-						<v-list-item prepend-icon="mdi-package-variant" title="Products" value="products"
-							:active="route.path.startsWith('/products')" @click="goto('/products')"
-							active-class="bg-black text-white" rounded="xl" class="mb-1" />
-
-						<v-list-item prepend-icon="mdi-cash-multiple" title="Orders" value="orders"
-							:active="route.path.startsWith('/orders')" @click="goto('/orders')"
-							active-class="bg-black text-white" rounded="xl" class="mb-1" />
-
-						<v-list-item prepend-icon="mdi-checkbox-marked-circle-outline" title="Tasks" value="tasks"
-							:active="route.path.startsWith('/tasks')" @click="goto('/tasks')"
-							active-class="bg-black text-white" rounded="xl" class="mb-1" />
-
-						<v-list-item prepend-icon="mdi-calendar-clock" title="Availabilities" value="availabilities"
-							:active="route.path === '/availabilities'" @click="goto('/availabilities')"
-							active-class="bg-black text-white" rounded="xl" class="mb-1" />
-
-						<v-list-item prepend-icon="mdi-google-analytics" title="Analytics" value="analytics"
-							:active="route.path === '/analytics'" @click="goto('/analytics')"
-							active-class="bg-black text-white" rounded="xl" class="mb-1" />
-
-						<v-list-item prepend-icon="mdi-comment-quote" title="Feedbacks" value="feedbacks"
-							:active="route.path === '/feedbacks'" @click="goto('/feedbacks')"
-							active-class="bg-black text-white" rounded="xl" class="mb-1" />
-					</template>
-
-					<!-- Admin Menu -->
-					<template v-else-if="data.admin.role === 'admin'">
-						<v-list-item prepend-icon="mdi-checkbox-marked-circle-outline" title="Tasks" value="tasks"
-							:active="route.path.startsWith('/tasks')" @click="goto('/tasks')"
-							active-class="bg-black text-white" rounded="xl" class="mb-1" />
-					</template>
-
-					<!-- Common Menu Items -->
-					<v-list-item prepend-icon="mdi-account" title="Profile" value="profile"
-						:active="route.path === '/profile'" @click="goto('/profile')" active-class="bg-black text-white"
-						rounded="xl" class="mb-1" />
-
-					<v-list-item prepend-icon="mdi-logout" title="Logout" value="logout"
-						:active="route.path === '/logout'" @click="helpers.logout" active-color="error" rounded="xl"
-						class="mt-4" />
-				</template>
-
-				<v-list-item v-if="!data.admin" prepend-icon="mdi-login" title="Login" value="login"
-					:active="route.path === '/login'" @click="goto('/login')" active-class="bg-black text-white"
-					rounded="xl" />
-			</v-list>
-		</v-navigation-drawer>
-	</v-layout>
+			<NuxtLink v-else href="/login" :class="{ active: route.path === '/login' }">Login</NuxtLink>
+		</div>
+	</header>
 </template>
 
 <style scoped>
@@ -145,11 +69,6 @@ header {
 	font-family: 'Montserrat', sans-serif;
 }
 
-.components-drawer {
-	font-family: 'Montserrat', sans-serif;
-	border: none;
-}
-
 .logo {
 	width: auto;
 	height: 35px;
@@ -157,6 +76,7 @@ header {
 	/* Make logo white to match theme */
 }
 
+/* Menu styles */
 .menu a {
 	color: rgba(255, 255, 255, 0.9);
 	text-decoration: none;
