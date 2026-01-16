@@ -61,11 +61,11 @@ function goto(path: string) {
 		</v-main>
 		<v-navigation-drawer v-model="drawer" temporary class="components-drawer rounded-e-xl" elevation="5">
 			<div class="pa-4 text-center">
-				<v-avatar size="80" color="purple-lighten-4" class="mb-3">
+				<v-avatar size="80" color="-lighten-4" class="mb-3">
 					<v-img v-if="data.admin" :src="adminAvatar" alt="Admin"></v-img>
-					<v-icon v-else icon="mdi-account" size="40" color="purple-darken-2"></v-icon>
+					<v-icon v-else icon="mdi-account" size="40" color="darken-2"></v-icon>
 				</v-avatar>
-				<h3 class="text-h6 font-weight-bold text-purple-darken-3 mb-1">{{ data.admin ? data.admin.name : 'Guest'
+				<h3 class="text-h6 font-weight-bold text-darken-3 mb-1">{{ data.admin ? data.admin.name : 'Guest'
 					}}</h3>
 				<p class="text-caption text-grey">Welcome back!</p>
 			</div>
@@ -80,45 +80,45 @@ function goto(path: string) {
 
 						<v-list-item prepend-icon="mdi-account-group" title="Admins" value="admins"
 							:active="route.path === '/' || route.path.startsWith('/admins')" @click="goto('/')"
-							active-color="purple-darken-2" rounded="xl" class="mb-1" />
+							active-class="bg-black text-white" rounded="xl" class="mb-1" />
 						<v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" value="dashboard"
 							:active="route.path === '/dashboard'" @click="goto('/dashboard')"
-							active-color="purple-darken-2" rounded="xl" class="mb-1" />
+							active-class="bg-black text-white" rounded="xl" class="mb-1" />
 						<v-list-item prepend-icon="mdi-package-variant" title="Products" value="products"
 							:active="route.path.startsWith('/products')" @click="goto('/products')"
-							active-color="purple-darken-2" rounded="xl" class="mb-1" />
+							active-class="bg-black text-white" rounded="xl" class="mb-1" />
 
 						<v-list-item prepend-icon="mdi-cash-multiple" title="Orders" value="orders"
 							:active="route.path.startsWith('/orders')" @click="goto('/orders')"
-							active-color="purple-darken-2" rounded="xl" class="mb-1" />
+							active-class="bg-black text-white" rounded="xl" class="mb-1" />
 
 						<v-list-item prepend-icon="mdi-checkbox-marked-circle-outline" title="Tasks" value="tasks"
 							:active="route.path.startsWith('/tasks')" @click="goto('/tasks')"
-							active-color="purple-darken-2" rounded="xl" class="mb-1" />
+							active-class="bg-black text-white" rounded="xl" class="mb-1" />
 
 						<v-list-item prepend-icon="mdi-calendar-clock" title="Availabilities" value="availabilities"
 							:active="route.path === '/availabilities'" @click="goto('/availabilities')"
-							active-color="purple-darken-2" rounded="xl" class="mb-1" />
+							active-class="bg-black text-white" rounded="xl" class="mb-1" />
 
 						<v-list-item prepend-icon="mdi-google-analytics" title="Analytics" value="analytics"
 							:active="route.path === '/analytics'" @click="goto('/analytics')"
-							active-color="purple-darken-2" rounded="xl" class="mb-1" />
+							active-class="bg-black text-white" rounded="xl" class="mb-1" />
 
 						<v-list-item prepend-icon="mdi-comment-quote" title="Feedbacks" value="feedbacks"
 							:active="route.path === '/feedbacks'" @click="goto('/feedbacks')"
-							active-color="purple-darken-2" rounded="xl" class="mb-1" />
+							active-class="bg-black text-white" rounded="xl" class="mb-1" />
 					</template>
 
 					<!-- Admin Menu -->
 					<template v-else-if="data.admin.role === 'admin'">
 						<v-list-item prepend-icon="mdi-checkbox-marked-circle-outline" title="Tasks" value="tasks"
 							:active="route.path.startsWith('/tasks')" @click="goto('/tasks')"
-							active-color="purple-darken-2" rounded="xl" class="mb-1" />
+							active-class="bg-black text-white" rounded="xl" class="mb-1" />
 					</template>
 
 					<!-- Common Menu Items -->
 					<v-list-item prepend-icon="mdi-account" title="Profile" value="profile"
-						:active="route.path === '/profile'" @click="goto('/profile')" active-color="purple-darken-2"
+						:active="route.path === '/profile'" @click="goto('/profile')" active-class="bg-black text-white"
 						rounded="xl" class="mb-1" />
 
 					<v-list-item prepend-icon="mdi-logout" title="Logout" value="logout"
@@ -127,7 +127,7 @@ function goto(path: string) {
 				</template>
 
 				<v-list-item v-if="!data.admin" prepend-icon="mdi-login" title="Login" value="login"
-					:active="route.path === '/login'" @click="goto('/login')" active-color="purple-darken-2"
+					:active="route.path === '/login'" @click="goto('/login')" active-class="bg-black text-white"
 					rounded="xl" />
 			</v-list>
 		</v-navigation-drawer>
