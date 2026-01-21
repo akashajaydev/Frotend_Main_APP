@@ -87,7 +87,7 @@ const getRoleTheme = (type: string) => {
 </script>
 
 <template>
-  <v-container fluid class="fill-height bg-grey-lighten-5 pa-6 align-start">
+  <v-container fluid class="fill-height dark-page pa-6 align-start">
     <div class="w-100">
         <!-- Header Section -->
         <div class="d-flex flex-column flex-md-row justify-space-between align-center mb-8">
@@ -96,7 +96,7 @@ const getRoleTheme = (type: string) => {
                     <v-icon icon="mdi-calendar-check" start color="primary" class="mr-2"></v-icon>
                     Appointments
                 </h1>
-                <p class="text-subtitle-1 text-grey-darken-1">
+                <p class="text-subtitle-1 text-grey-darken-5">
                     Manage schedule, assign staff, and track appointment status.
                 </p>
             </div>
@@ -206,8 +206,8 @@ const getRoleTheme = (type: string) => {
                             </div>
 
                             <!-- Unassigned State -->
-                            <div v-else class="unassigned-state rounded-lg pa-4 text-center border-dashed border-opacity-50 border-primary bg-blue-grey-lighten-5">
-                                <div class="text-body-2 text-grey-darken-1 mb-2">No specialist assigned yet</div>
+                            <div v-else class="unassigned-state rounded-lg pa-4 text-center border border-opacity-50 border-primary bg-blue-grey-lighten-5">
+                                <!-- <div class="text-body-2 text-grey-darken-1 mb-2">No specialist assigned yet</div> -->
                                 <v-btn 
                                     block 
                                     rounded="lg" 
@@ -380,6 +380,9 @@ const getRoleTheme = (type: string) => {
 
 .letter-spacing-1 {
     letter-spacing: 1px;
+}
+.dark-page {
+  background-color: #d3d1d1; /* near-black */
 }
 
 
