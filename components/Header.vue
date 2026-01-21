@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useUIStore } from '~/stores/ui'
 import adminAvatar from '~/assets/images/admin.png'
+import siteLogo from '~/assets/images/logo.png'
 
 const data = useDataStore()
 const ui = useUIStore()
@@ -24,8 +25,8 @@ function goto(path: string) {
 
 		<v-btn @click="toggleDrawer" icon="mdi-menu" size="small" variant="text" color="white"
 			class="ms-2"></v-btn>
-		<NuxtLink href="/" title="XtrasZone Admin Panel">
-			<img src="/logo.svg" alt="Site Logo" class="logo" />
+		<NuxtLink href="/" title="Aoqolt Admin Panel">
+			<img :src="siteLogo" alt="Site Logo" class="logo" />
 		</NuxtLink>
 
 		<div class="menu h-100 d-flex align-center">
@@ -71,9 +72,9 @@ header {
 
 .logo {
 	width: auto;
-	height: 35px;
-	filter: brightness(0) invert(1);
-	/* Make logo white to match theme */
+	height: 60px;
+	border-radius: 50%;
+	/* Removed filter to show original logo colors */
 }
 
 /* Menu styles */

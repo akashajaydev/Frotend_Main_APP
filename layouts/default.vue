@@ -25,18 +25,7 @@ function goto(path: string) {
 		<v-main>
 			<!-- Alert Message -->
 			<v-container>
-				<v-alert
-					v-model="alert.visible"
-					border="start"
-					variant="tonal"
-					closable
-					:icon="alert.icon"
-					close-label="Close"
-					:color="alert.color"
-					:title="alert.title"
-				>
-					{{ alert.message }}
-				</v-alert>
+				
 			</v-container>
 			<slot />
 		</v-main>
