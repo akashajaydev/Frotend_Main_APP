@@ -87,126 +87,247 @@ const getRoleTheme = (type: string) => {
 </script>
 
 <template>
-  <v-container fluid class="pa-6">
-    <div class="mb-8">
-        <h1 class="text-h4 font-weight-bold text-grey-darken-3">Appointments</h1>
-        <p class="text-subtitle-1 text-grey">Manage and assign appointments to your team</p>
+  <v-container fluid class="fill-height bg-grey-lighten-5 pa-6 align-start">
+    <div class="w-100">
+        <!-- Header Section -->
+        <div class="d-flex flex-column flex-md-row justify-space-between align-center mb-8">
+            <div>
+                <h1 class="text-h3 font-weight-black text-grey-darken-3 mb-2">
+                    <v-icon icon="mdi-calendar-check" start color="primary" class="mr-2"></v-icon>
+                    Appointments
+                </h1>
+                <p class="text-subtitle-1 text-grey-darken-1">
+                    Manage schedule, assign staff, and track appointment status.
+                </p>
+            </div>
+             <!-- Quick Stats -->
+            <div class="d-flex gap-4 mt-4 mt-md-0">
+                 <v-sheet class="px-6 py-3 rounded-xl elevation-2 text-center d-flex align-center">
+                    <v-icon icon="mdi-calendar-today" color="primary" class="mr-3" size="large"></v-icon>
+                    <div class="text-left">
+                        <div class="text-caption font-weight-bold text-grey">Total</div>
+                        <div class="text-h6 font-weight-black">{{ appointments.length }}</div>
+                    </div>
+                 </v-sheet>
+                 <v-sheet class="px-6 py-3 rounded-xl elevation-2 text-center d-flex align-center ml-3">
+                    <v-icon icon="mdi-timer-sand" color="warning" class="mr-3" size="large"></v-icon>
+                    <div class="text-left">
+                        <div class="text-caption font-weight-bold text-grey">Pending</div>
+                        <div class="text-h6 font-weight-black">{{ appointments.filter(a => a.status === 'Pending').length }}</div>
+                    </div>
+                 </v-sheet>
+            </div>
+        </div>
+
+        <v-divider class="mb-8 border-opacity-75"></v-divider>
+
+        <!-- Appointment Grid -->
+        <v-row>
+            <v-col v-for="appt in appointments" :key="appt.id" cols="12" md="6" lg="4" xl="3">
+                <v-hover v-slot="{ isHovering, props }">
+                    <v-card 
+                        v-bind="props"
+                        class="appointment-card rounded-xl overflow-visible" 
+                        :elevation="isHovering ? 8 : 2"
+                        :class="{'on-hover': isHovering}"
+                    >
+                        <!-- Status Badge -->
+                        <div class="status-badge">
+                            <v-chip :color="getStatusColor(appt.status)" class="font-weight-bold elevation-1 text-uppercase" size="small" label>
+                                {{ appt.status }}
+                            </v-chip>
+                        </div>
+
+                        <v-card-text class="pt-8 pb-4 px-6">
+                            <!-- Service Icon & Title -->
+                            <div class="d-flex align-start mb-4">
+                                <v-avatar color="primary" variant="tonal" rounded="lg" size="50" class="mr-4">
+                                     <v-icon icon="mdi-sparkles" size="28" color="primary"></v-icon>
+                                </v-avatar>
+                                <div>
+                                    <div class="text-overline text-primary font-weight-bold mb-n1 text-truncate" style="max-width: 150px;">{{ appt.service }}</div>
+                                    <h3 class="text-h6 font-weight-bold text-grey-darken-3 text-truncate" style="max-width: 180px;">{{ appt.customer }}</h3>
+                                </div>
+                            </div>
+
+                            <!-- Date info -->
+                            <div class="d-flex align-center bg-grey-lighten-5 pa-3 rounded-lg mb-4 text-grey-darken-2">
+                                 <v-icon icon="mdi-calendar-range" start size="small"></v-icon>
+                                 <span class="text-body-2 font-weight-medium">{{ appt.date }}</span>
+                            </div>
+
+                            <v-divider class="mb-4 border-dashed"></v-divider>
+
+                            <!-- Assignment Section -->
+                            <div v-if="appt.assignedTo">
+                                <div class="text-caption text-grey font-weight-bold mb-2 text-uppercase letter-spacing-1">Assigned Specialist</div>
+                                <div class="assigned-card d-flex align-center pa-2 rounded-lg border bg-white transition-swing">
+                                     <v-avatar size="44" class="mr-3 border cursor-pointer">
+                                        <v-img v-if="getAdminById(appt.assignedTo)?.avatar" :src="getAdminById(appt.assignedTo)?.avatar" cover></v-img>
+                                         <v-icon v-else :icon="getRoleTheme(getAdminById(appt.assignedTo)?.type || '').icon" 
+                                            :color="getRoleTheme(getAdminById(appt.assignedTo)?.type || '').color"></v-icon>
+                                     </v-avatar>
+                                     <div class="flex-grow-1 overflow-hidden">
+                                        <div class="font-weight-bold text-subtitle-2 text-truncate">
+                                            {{ getAdminById(appt.assignedTo)?.name || 'Unknown' }}
+                                        </div>
+                                        <div class="text-caption text-grey text-truncate">
+                                            {{ getAdminById(appt.assignedTo)?.type }}
+                                        </div>
+                                     </div>
+                                     
+                                     <!-- Actions -->
+                                     <div class="d-flex flex-column ml-2">
+                                         <v-btn
+                                            icon
+                                            size="x-small"
+                                            density="comfortable"
+                                            variant="plain"
+                                            color="grey-darken-3"
+                                            @click="openAssignDialog(appt)"
+                                        >
+                                            <v-icon icon="mdi-pencil-outline" />
+                                            <v-tooltip activator="parent" location="top">Change</v-tooltip>
+                                        </v-btn>
+
+                                        <v-btn
+                                            icon
+                                            size="x-small"
+                                            density="comfortable"
+                                            variant="plain"
+                                            color="error"
+                                            @click="removeAssignment(appt)"
+                                        >
+                                            <v-icon icon="mdi-close-circle-outline" />
+                                            <v-tooltip activator="parent" location="top">Remove</v-tooltip>
+                                        </v-btn>
+                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- Unassigned State -->
+                            <div v-else class="unassigned-state rounded-lg pa-4 text-center border-dashed border-opacity-50 border-primary bg-blue-grey-lighten-5">
+                                <div class="text-body-2 text-grey-darken-1 mb-2">No specialist assigned yet</div>
+                                <v-btn 
+                                    block 
+                                    rounded="lg" 
+                                    color="primary" 
+                                    variant="flat" 
+                                    elevation="1"
+                                    prepend-icon="mdi-account-plus" 
+                                    @click="openAssignDialog(appt)"
+                                    class="text-none font-weight-bold"
+                                >
+                                    Assign Now
+                                </v-btn>
+                            </div>
+                        </v-card-text>
+                    </v-card>
+                </v-hover>
+            </v-col>
+        </v-row>
     </div>
 
-    <v-row>
-        <v-col v-for="appt in appointments" :key="appt.id" cols="12" md="6" lg="4">
-            <v-card class="elevation-2 rounded-xl" :class="{'border-success': appt.status === 'Completed'}">
-                <v-card-text>
-                    <div class="d-flex justify-space-between align-start mb-4">
-                        <div>
-                            <h3 class="text-h6 font-weight-bold">{{ appt.customer }}</h3>
-                            <div class="text-body-2 text-grey-darken-1 d-flex align-center mt-1">
-                                <v-icon size="small" icon="mdi-calendar-clock" class="mr-1"></v-icon>
-                                {{ appt.date }}
-                            </div>
-                             <div class="text-body-2 text-primary font-weight-medium mt-1">
-                                {{ appt.service }}
-                            </div>
-                        </div>
-                        <v-chip :color="getStatusColor(appt.status)" size="small" class="font-weight-bold" variant="flat">
-                            {{ appt.status }}
-                        </v-chip>
-                    </div>
-
-                    <v-divider class="mb-4"></v-divider>
-
-                    <!-- Assigned Section -->
-                    <div v-if="appt.assignedTo" class="d-flex align-center bg-grey-lighten-4 pa-3 rounded-lg">
-                         <v-avatar size="40" class="mr-3 border">
-                            <v-img v-if="getAdminById(appt.assignedTo)?.avatar" :src="getAdminById(appt.assignedTo)?.avatar" cover></v-img>
-                             <v-icon v-else :icon="getRoleTheme(getAdminById(appt.assignedTo)?.type || '').icon" 
-                                :color="getRoleTheme(getAdminById(appt.assignedTo)?.type || '').color"></v-icon>
-                         </v-avatar>
-                         <div>
-                            <div class="text-caption text-grey">Assigned to</div>
-                            <div class="font-weight-bold text-body-2">
-                                {{ getAdminById(appt.assignedTo)?.name || 'Unknown' }}
-                            </div>
-                         </div>
-                         <v-spacer></v-spacer>
-                         <div class="d-flex flex-column">
-                             <v-btn icon="mdi-pencil" size="x-small" variant="text" color="grey" @click="openAssignDialog(appt)"></v-btn>
-                             <v-btn icon="mdi-close" size="x-small" variant="text" color="error" @click="removeAssignment(appt)"></v-btn>
-                         </div>
-                    </div>
-
-                    <!-- Unassigned Action -->
-                    <div v-else>
-                        <v-btn block variant="tonal" color="primary" prepend-icon="mdi-account-plus" @click="openAssignDialog(appt)">
-                            Assign Admin
-                        </v-btn>
-                    </div>
-                </v-card-text>
-            </v-card>
-        </v-col>
-    </v-row>
-
     <!-- Assignment Dialog -->
-    <v-dialog v-model="assignDialog" max-width="500px">
-        <v-card class="rounded-xl pa-4">
-            <v-card-title class="text-h5 font-weight-bold mb-2">Assign Appointment</v-card-title>
-            <v-card-subtitle v-if="selectedAppointment">
-                For {{ selectedAppointment.customer }} - {{ selectedAppointment.service }}
-            </v-card-subtitle>
-            
-            <v-card-text class="mt-4">
+    <v-dialog v-model="assignDialog" max-width="550px" transition="dialog-bottom-transition">
+        <v-card class="rounded-xl overflow-hidden bg-white">
+            <v-toolbar color="primary" class="px-4">
+                 <v-icon icon="mdi-account-search" class="mr-2"></v-icon>
+                 <v-toolbar-title class="text-h6 font-weight-bold">Assign Specialist</v-toolbar-title>
+                 <v-btn icon="mdi-close" variant="text" @click="assignDialog = false"></v-btn>
+            </v-toolbar>
+
+            <div class="pa-5 bg-grey-lighten-5">
+                 <div v-if="selectedAppointment" class="mb-4 d-flex align-center">
+                    <v-avatar color="white" class="elevation-1 mr-3">
+                        <v-icon icon="mdi-calendar-check" color="primary"></v-icon>
+                    </v-avatar>
+                    <div>
+                        <div class="text-caption text-grey font-weight-bold">Target Appointment</div>
+                        <div class="text-body-1 font-weight-bold text-grey-darken-3">{{ selectedAppointment.customer }} <span class="text-grey mx-1">•</span> {{ selectedAppointment.service }}</div>
+                    </div>
+                 </div>
+
                 <v-text-field
                     v-model="searchQuery"
                     prepend-inner-icon="mdi-magnify"
-                    label="Search Admin"
-                    placeholder="Name or Role"
-                    variant="outlined"
+                    label="Search available staff..."
+                    placeholder="Type name or role (e.g. 'Baba')"
+                    variant="solo"
+                    density="comfortable"
+                    bg-color="white"
                     rounded="lg"
                     hide-details
-                    class="mb-4"
+                    class="elevation-1"
                 ></v-text-field>
+            </div>
+            
+            <v-divider></v-divider>
 
-                <v-list class="bg-transparent" max-height="400" style="overflow-y: auto;">
-                    <template v-if="filteredAdmins.length > 0">
-                        <v-list-item
-                            v-for="admin in filteredAdmins"
-                            :key="admin.id"
-                            @click="assignAdmin(admin)"
-                            rounded="lg"
-                            class="mb-2 border"
-                            lines="two"
-                            :disabled="!admin.active"
-                        >
-                            <template v-slot:prepend>
-                                <v-avatar size="48" class="border">
+            <v-list class="pa-2 bg-white" max-height="400" style="overflow-y: auto;">
+                <div class="text-caption font-weight-bold text-grey ml-4 mt-2 mb-2">AVAILABLE STAFF</div>
+                <template v-if="filteredAdmins.length > 0">
+                    <v-list-item
+                        v-for="admin in filteredAdmins"
+                        :key="admin.id"
+                        @click="assignAdmin(admin)"
+                        rounded="lg"
+                        class="mb-2 admin-list-item mx-2 border-thin"
+                        lines="two"
+                        :disabled="!admin.active"
+                        :base-color="admin.active ? 'white' : 'grey-lighten-4'"
+                    >
+                        <template v-slot:prepend>
+                             <v-badge 
+                                dot 
+                                :color="admin.active ? 'success' : 'grey'"
+                                location="bottom right"
+                                offset-x="5"
+                                offset-y="5"
+                            >
+                                <v-avatar size="50" class="border elevation-1">
                                     <v-img v-if="admin.avatar" :src="admin.avatar" cover></v-img>
                                     <v-icon v-else :icon="getRoleTheme(admin.type).icon" :color="getRoleTheme(admin.type).color"></v-icon>
                                 </v-avatar>
-                            </template>
+                            </v-badge>
+                        </template>
 
-                            <v-list-item-title class="font-weight-bold">{{ admin.name }}</v-list-item-title>
-                            <v-list-item-subtitle class="d-flex align-center mt-1">
-                                <v-chip size="x-small" :color="getRoleTheme(admin.type).color" variant="outlined" class="mr-2">
-                                    {{ admin.type }}
-                                </v-chip>
-                                <span v-if="!admin.active" class="text-error text-caption">Inactive</span>
-                            </v-list-item-subtitle>
-                            
-                            <template v-slot:append>
-                                <v-icon color="primary" icon="mdi-check-circle-outline" v-if="selectedAppointment?.assignedTo === admin.id"></v-icon>
-                                <v-icon color="grey-lighten-2" icon="mdi-chevron-right" v-else></v-icon>
-                            </template>
-                        </v-list-item>
-                    </template>
-                    <div v-else class="text-center py-4 text-grey">
-                        No admins found behaving like "{{ searchQuery }}"
-                    </div>
-                </v-list>
-            </v-card-text>
-            <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="grey" variant="text" @click="assignDialog = false">Cancel</v-btn>
-            </v-card-actions>
+                        <v-list-item-title class="font-weight-bold text-body-1 ml-2" style="color: #212121">{{ admin.name }}</v-list-item-title>
+                        <v-list-item-subtitle class="d-flex align-center mt-1 ml-2">
+                            <v-chip size="x-small" :color="getRoleTheme(admin.type).color" variant="tonal" class="mr-2 font-weight-bold">
+                                {{ admin.type }}
+                            </v-chip>
+                            <span v-if="!admin.active" class="text-error text-caption font-weight-medium">
+                                <v-icon icon="mdi-cancel" size="small" start></v-icon>Unavailable
+                            </span>
+                        </v-list-item-subtitle>
+                        
+                        <template v-slot:append>
+                            <v-btn 
+                                v-if="selectedAppointment?.assignedTo === admin.id" 
+                                color="success" 
+                                variant="tonal" 
+                                size="small" 
+                                class="font-weight-bold"
+                                prepend-icon="mdi-check"
+                            >
+                                Assigned
+                            </v-btn>
+                            <v-btn 
+                                v-else-if="admin.active"
+                                variant="text" 
+                                color="primary" 
+                                icon="mdi-chevron-right"
+                            ></v-btn>
+                        </template>
+                    </v-list-item>
+                </template>
+                <div v-else class="text-center py-12">
+                    <v-icon icon="mdi-account-off-outline" size="64" color="grey-lighten-2" class="mb-4"></v-icon>
+                    <div class="text-h6 text-grey">No matches found</div>
+                    <div class="text-body-2 text-grey-lighten-1">Try searching for a different name or role</div>
+                </div>
+            </v-list>
         </v-card>
     </v-dialog>
 
@@ -214,7 +335,52 @@ const getRoleTheme = (type: string) => {
 </template>
 
 <style scoped>
-.border-success {
-    border-top: 4px solid #4CAF50 !important;
+.appointment-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(0,0,0,0.05);
 }
+
+.appointment-card.on-hover {
+    transform: translateY(-6px);
+    border-color: rgba(var(--v-theme-primary), 0.2);
+}
+
+.status-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+}
+
+.border-dashed {
+    border-style: dashed !important;
+}
+
+.assigned-card {
+    border-color: rgba(0,0,0,0.08) !important;
+    transition: background-color 0.2s;
+}
+
+.assigned-card:hover {
+    background-color: #FAFAFA !important;
+}
+
+.admin-list-item {
+    transition: all 0.2s;
+}
+
+.admin-list-item:hover {
+    background-color: #F5F5F5;
+    transform: translateX(4px);
+}
+
+.gap-4 {
+    gap: 16px;
+}
+
+.letter-spacing-1 {
+    letter-spacing: 1px;
+}
+
+
 </style>
