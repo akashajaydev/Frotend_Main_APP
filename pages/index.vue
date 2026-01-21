@@ -235,4 +235,24 @@ function deleteAdmin(item: any) {
 .gap-4 {
     gap: 16px;
 }
+
+/* Custom Table Styling */
+.admin-table :deep(thead tr th) {
+   background-color: #dbdbdd !important;
+   color: #070707 !important;
+   font-weight: 700 !important;
+   letter-spacing: 0.05em;
+   text-transform: uppercase;
+   font-size: 0.75rem;
+}
+
+.admin-table :deep(tbody tr:hover) {
+    background-color: #f3f4f6 !important; /* Slight grey on hover */
+    transition: background-color 0.2s ease;
+}
+
+.admin-table :deep(tbody tr td) {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
 </style>

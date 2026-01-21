@@ -160,7 +160,7 @@ const getRoleTheme = (type: string) => {
 
                             <!-- Assignment Section -->
                             <div v-if="appt.assignedTo">
-                                <div class="text-caption text-grey font-weight-bold mb-2 text-uppercase letter-spacing-1">Assigned Specialist</div>
+                                <div class="text-caption text-grey-darken-3 font-weight-bold mb-2 text-uppercase letter-spacing-1">Assigned Specialist</div>
                                 <div class="assigned-card d-flex align-center pa-2 rounded-lg border bg-white transition-swing">
                                      <v-avatar size="44" class="mr-3 border cursor-pointer">
                                         <v-img v-if="getAdminById(appt.assignedTo)?.avatar" :src="getAdminById(appt.assignedTo)?.avatar" cover></v-img>
