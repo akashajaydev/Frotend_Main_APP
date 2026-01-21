@@ -11,6 +11,7 @@ const admins = ref([
   { id: 7, name: 'Baba Ganeshan', email: 'ganeshan@example.com', type: 'Baba', active: false, avatar: '' },
 ])
 
+const search = ref('')
 const createDialog = ref(false)
 const newAdmin = ref({
   name: '',
@@ -21,13 +22,20 @@ const newAdmin = ref({
 
 const adminTypes = ['Baba', 'Astrologer', 'Healer']
 
+const headers = [
+  { title: 'Admin', key: 'name', align: 'start' },
+  { title: 'Role', key: 'type', align: 'center' },
+  { title: 'Status', key: 'active', align: 'center' },
+  { title: 'Actions', key: 'actions', align: 'end', sortable: false },
+]
+
 // Helper for Role styling
 const getRoleTheme = (type: string) => {
   switch (type) {
-    case 'Baba': return { color: 'orange-darken-2', gradient: 'linear-gradient(135deg, #FF9800, #F57C00)', icon: 'mdi-om' }
-    case 'Astrologer': return { color: 'deep-purple-lighten-1', gradient: 'linear-gradient(135deg, #673AB7, #512DA8)', icon: 'mdi-star-four-points' }
-    case 'Healer': return { color: 'teal-lighten-1', gradient: 'linear-gradient(135deg, #009688, #00796B)', icon: 'mdi-hand-heart' }
-    default: return { color: 'grey', gradient: 'linear-gradient(135deg, #757575, #616161)', icon: 'mdi-account' }
+    case 'Baba': return { color: 'orange-darken-2', icon: 'mdi-om' }
+    case 'Astrologer': return { color: 'deep-purple-lighten-1', icon: 'mdi-star-four-points' }
+    case 'Healer': return { color: 'teal-lighten-1', icon: 'mdi-hand-heart' }
+    default: return { color: 'grey', icon: 'mdi-account' }
   }
 }
 
@@ -60,96 +68,104 @@ function deleteAdmin(item: any) {
 
 <template>
   <v-container fluid class="pa-6">
-    <div class="d-flex justify-space-between align-center mb-8">
+    <div class="d-flex flex-column flex-md-row justify-space-between align-md-center mb-8 gap-4">
       <div>
         <h1 class="text-h4 font-weight-bold text-grey-darken-3">Admins</h1>
         <p class="text-subtitle-1 text-grey">Manage your Babas, Astrologers, and Healers</p>
       </div>
-      <v-btn
-        color="primary"
-        prepend-icon="mdi-plus"
-        rounded="xl"
-        size="large"
-        elevation="3"
-        @click="openCreateDialog"
-        class="text-none font-weight-bold"
-      >
-        Create Admin
-      </v-btn>
+      <div class="d-flex gap-4 align-center">
+        <v-text-field
+            v-model="search"
+            prepend-inner-icon="mdi-magnify"
+            density="compact"
+            label="Search Admins"
+            single-line
+            hide-details
+            variant="outlined"
+            rounded="xl"
+            class="search-field"
+            style="width: 300px; max-width: 100%;"
+        ></v-text-field>
+        <v-btn
+            color="primary"
+            prepend-icon="mdi-plus"
+            rounded="xl"
+            size="large"
+            elevation="3"
+            @click="openCreateDialog"
+            class="text-none font-weight-bold"
+        >
+            Create Admin
+        </v-btn>
+      </div>
     </div>
 
-    <v-row>
-      <v-col
-        v-for="admin in admins"
-        :key="admin.id"
-        cols="12"
-        sm="6"
-        md="4"
-        lg="3"
+    <v-card elevation="2" rounded="xl" class="overflow-hidden">
+      <v-data-table
+        :headers="headers"
+        :items="admins"
+        :search="search"
+        class="admin-table"
+        hover
       >
-        <v-hover v-slot="{ isHovering, props }">
-          <v-card
-            v-bind="props"
-            :elevation="isHovering ? 8 : 2"
-            class="admin-card pt-12 text-center"
-            rounded="xl"
-            :class="{ 'on-hover': isHovering }"
-          >
-            <!-- Colored Header/Top Bar -->
-            <div class="card-header-bg" :style="{ background: getRoleTheme(admin.type).gradient }"></div>
-
-            <!-- Avatar -->
-            <div class="avatar-wrapper">
-              <v-avatar size="100" class="elevation-4 border-white">
-                <v-img v-if="admin.avatar" :src="admin.avatar" cover></v-img>
-                <div v-else class="d-flex justify-center align-center w-100 h-100 bg-white">
-                   <v-icon :icon="getRoleTheme(admin.type).icon" size="50" :color="getRoleTheme(admin.type).color"></v-icon>
-                </div>
-              </v-avatar>
-              <!-- Active Indicator -->
-              <v-icon
-                class="active-status-icon"
-                :icon="admin.active ? 'mdi-check-circle' : 'mdi-close-circle'"
-                :color="admin.active ? 'success' : 'error'"
-              ></v-icon>
+        <!-- Admin Name & Avatar Slot -->
+        <template v-slot:item.name="{ item }">
+          <div class="d-flex align-center py-2">
+            <v-avatar size="40" class="mr-3 elevation-2">
+              <v-img v-if="item.avatar" :src="item.avatar" cover></v-img>
+              <v-icon v-else :icon="getRoleTheme(item.type).icon" :color="getRoleTheme(item.type).color" class="bg-grey-lighten-4"></v-icon>
+            </v-avatar>
+            <div>
+              <div class="text-subtitle-2 font-weight-bold text-grey-darken-3">{{ item.name }}</div>
+              <div class="text-caption text-grey">{{ item.email }}</div>
             </div>
+          </div>
+        </template>
 
-            <!-- Content -->
-            <v-card-text class="mt-2">
-              <h3 class="text-h6 font-weight-bold text-grey-darken-3 mb-1">{{ admin.name }}</h3>
-              <p class="text-body-2 text-grey mb-3">{{ admin.email }}</p>
+        <!-- Role Slot -->
+        <template v-slot:item.type="{ item }">
+          <v-chip
+            :color="getRoleTheme(item.type).color"
+            variant="tonal"
+            size="small"
+            class="font-weight-bold px-3"
+            label
+          >
+            <v-icon start size="small" :icon="getRoleTheme(item.type).icon"></v-icon>
+            {{ item.type }}
+          </v-chip>
+        </template>
 
-              <v-chip
-                :color="getRoleTheme(admin.type).color"
-                variant="outlined"
-                class="font-weight-bold px-4"
-                size="small"
-              >
-                {{ admin.type }}
-              </v-chip>
-            </v-card-text>
+        <!-- Status Slot -->
+        <template v-slot:item.active="{ item }">
+            <div class="d-flex justify-center">
+                <v-icon
+                    :icon="item.active ? 'mdi-check-circle' : 'mdi-close-circle'"
+                    :color="item.active ? 'success' : 'error'"
+                    size="small"
+                ></v-icon>
+            </div>
+        </template>
 
-            <v-divider class="mx-4 my-2"></v-divider>
-
-            <!-- Actions -->
-            <v-card-actions class="justify-center pb-4">
-               <v-btn icon size="small" variant="text" color="grey" @click="viewAdmin(admin)">
-                 <v-icon>mdi-eye</v-icon>
-                 <v-tooltip activator="parent" location="top">View Profile</v-tooltip>
-               </v-btn>
-               <v-btn icon size="small" variant="text" color="primary" @click="editAdmin(admin)">
-                 <v-icon>mdi-pencil</v-icon>
-                 <v-tooltip activator="parent" location="top">Edit</v-tooltip>
-               </v-btn>
-               <v-btn icon size="small" variant="text" color="error" @click="deleteAdmin(admin)">
-                 <v-icon>mdi-delete</v-icon>
-                 <v-tooltip activator="parent" location="top">Delete</v-tooltip>
-               </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-hover>
-      </v-col>
-    </v-row>
+        <!-- Actions Slot -->
+        <template v-slot:item.actions="{ item }">
+            <div class="d-flex justify-end">
+                <v-btn icon size="small" variant="text" color="grey" @click="viewAdmin(item)">
+                    <v-icon>mdi-eye-outline</v-icon>
+                    <v-tooltip activator="parent" location="top">View</v-tooltip>
+                </v-btn>
+                <v-btn icon size="small" variant="text" color="primary" @click="editAdmin(item)">
+                    <v-icon>mdi-pencil-outline</v-icon>
+                    <v-tooltip activator="parent" location="top">Edit</v-tooltip>
+                </v-btn>
+                <v-btn icon size="small" variant="text" color="error" @click="deleteAdmin(item)">
+                    <v-icon>mdi-delete-outline</v-icon>
+                    <v-tooltip activator="parent" location="top">Delete</v-tooltip>
+                </v-btn>
+            </div>
+        </template>
+      </v-data-table>
+    </v-card>
 
     <!-- Create Admin Dialog -->
     <v-dialog v-model="createDialog" max-width="500px">
@@ -216,42 +232,7 @@ function deleteAdmin(item: any) {
 .v-container {
     font-family: 'Montserrat', sans-serif;
 }
-
-.admin-card {
-    position: relative;
-    transition: all 0.3s ease-in-out;
-    background: white;
-    overflow: hidden;
-}
-
-.admin-card.on-hover {
-    transform: translateY(-8px);
-}
-
-.card-header-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100px;
-}
-
-.avatar-wrapper {
-    position: relative;
-    display: inline-block;
-    margin-top: 10px; /* Adjust to overlap correctly */
-}
-
-.border-white {
-    border: 4px solid white;
-}
-
-.active-status-icon {
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    background: white;
-    border-radius: 50%;
-    border: 2px solid white;
+.gap-4 {
+    gap: 16px;
 }
 </style>
