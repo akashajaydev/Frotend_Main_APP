@@ -382,7 +382,7 @@ const getRoleTheme = (type: string) => {
     letter-spacing: 1px;
 }
 .dark-page {
-  background-color: #d3d1d1; /* near-black */
+  background-color: #f0ecec; /* near-black */
 }
 
 
