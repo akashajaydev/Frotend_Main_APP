@@ -78,10 +78,6 @@ function goto(path: string) {
 						<v-list-item prepend-icon="mdi-google-analytics" title="Analytics" value="analytics"
 							:active="route.path === '/analytics'" @click="goto('/analytics')"
 							active-class="bg-black text-white" rounded="xl" class="mb-1" />
-
-						<v-list-item prepend-icon="mdi-comment-quote" title="Feedbacks" value="feedbacks"
-							:active="route.path === '/feedbacks'" @click="goto('/feedbacks')"
-							active-class="bg-black text-white" rounded="xl" class="mb-1" />
 					</template>
 
 					<!-- Admin Menu -->
