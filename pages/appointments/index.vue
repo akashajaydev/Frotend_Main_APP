@@ -160,12 +160,10 @@ const getRoleTheme = (type: string) => {
 
                             <!-- Assignment Section -->
                             <div v-if="appt.assignedTo">
-                                <div class="text-caption text-grey-darken-3 font-weight-bold mb-2 text-uppercase letter-spacing-1">Assigned Specialist</div>
+                                <div class="text-caption text-grey-darken-5 font-weight-bold mb-2 text-uppercase letter-spacing-1">Assigned Specialist</div>
                                 <div class="assigned-card d-flex align-center pa-2 rounded-lg border bg-white transition-swing">
                                      <v-avatar size="44" class="mr-3 border cursor-pointer">
-                                        <v-img v-if="getAdminById(appt.assignedTo)?.avatar" :src="getAdminById(appt.assignedTo)?.avatar" cover></v-img>
-                                         <v-icon v-else :icon="getRoleTheme(getAdminById(appt.assignedTo)?.type || '').icon" 
-                                            :color="getRoleTheme(getAdminById(appt.assignedTo)?.type || '').color"></v-icon>
+                                        <v-img :src="getAdminById(appt.assignedTo)?.avatar || 'https://randomuser.me/api/portraits/men/85.jpg'" cover></v-img>
                                      </v-avatar>
                                      <div class="flex-grow-1 overflow-hidden">
                                         <div class="font-weight-bold text-subtitle-2 text-truncate">
@@ -286,8 +284,7 @@ const getRoleTheme = (type: string) => {
                                 offset-y="5"
                             >
                                 <v-avatar size="50" class="border elevation-1">
-                                    <v-img v-if="admin.avatar" :src="admin.avatar" cover></v-img>
-                                    <v-icon v-else :icon="getRoleTheme(admin.type).icon" :color="getRoleTheme(admin.type).color"></v-icon>
+                                    <v-img :src="admin.avatar || 'https://randomuser.me/api/portraits/men/85.jpg'" cover></v-img>
                                 </v-avatar>
                             </v-badge>
                         </template>
