@@ -52,6 +52,7 @@ const contacts = ref([
 const search = ref('')
 
 const headers = [
+  { title: 'No.', key: 'id', align: 'start' },
   { title: 'Name', key: 'name', align: 'start' },
   { title: 'Contact Details', key: 'email', align: 'start' },
   { title: 'Address', key: 'address', align: 'start' },
@@ -91,6 +92,11 @@ const headers = [
         class="contact-table"
         hover
       >
+        <!-- ID Slot -->
+        <template v-slot:item.id="{ item }">
+          <div class="font-weight-bold text-grey-darken-1 mt-5">{{ item.id }}</div>
+        </template>
+
         <!-- Name Slot -->
         <template v-slot:item.name="{ item }">
           <div class="font-weight-bold text-grey-darken-3 mt-5">{{ item.name }}</div>
