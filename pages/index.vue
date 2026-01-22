@@ -76,6 +76,14 @@ function deleteAdmin(item: any) {
         <p class="text-subtitle-1 text-grey">Manage your Babas, Astrologers, and Healers</p>
       </div>
       <div class="d-flex gap-4 align-center">
+        <v-chip
+           color="primary"
+           variant="tonal"
+           size="large"
+           class="font-weight-bold"
+        >
+          Admins - {{ admins.length }}
+        </v-chip>
         <v-text-field
             v-model="search"
             prepend-inner-icon="mdi-magnify"
