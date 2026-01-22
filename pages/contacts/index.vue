@@ -126,7 +126,7 @@ const headers = [
             <div v-if="item.additionalNotes" class="text-body-2 font-italic text-grey-darken-4 mt-4">
                 "{{ item.additionalNotes }}"
             </div>
-            <span v-else class="text-caption text-grey-lighten-1">No notes provided</span>
+            <span v-else class="text-caption text-grey-lighten-1 mt-5">No notes provided</span>
         </template>
 
          <!-- Date Slot -->
