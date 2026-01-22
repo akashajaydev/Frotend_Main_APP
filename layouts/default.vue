@@ -56,6 +56,9 @@ function goto(path: string) {
 						<v-list-item prepend-icon="mdi-calendar-check" title="Appointments" value="appointments"
 							:active="route.path.startsWith('/appointments')" @click="goto('/appointments')"
 							active-class="bg-black text-white" rounded="xl" class="mb-1" />
+						<v-list-item prepend-icon="mdi-card-account-mail" title="Contacts" value="contacts"
+							:active="route.path.startsWith('/contacts')" @click="goto('/contacts')"
+							active-class="bg-black text-white" rounded="xl" class="mb-1" />
 						<v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" value="dashboard"
 							:active="route.path === '/dashboard'" @click="goto('/dashboard')"
 							active-class="bg-black text-white" rounded="xl" class="mb-1" />
