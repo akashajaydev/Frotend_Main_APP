@@ -112,12 +112,12 @@ const headers = [
         
         <!-- Address Slot -->
          <template v-slot:item.address="{ item }">
-            <span class="text-body-2 text-grey-darken-5 mt-5">{{ item.address }}</span>
+            <div class="text-body-2 text-grey-darken-5 mt-5">{{ item.address }}</div>
         </template>
 
         <!-- Notes Slot -->
         <template v-slot:item.additionalNotes="{ item }">
-            <div v-if="item.additionalNotes" class="text-body-2 font-italic text-grey-darken-5 mt-3">
+            <div v-if="item.additionalNotes" class="text-body-2 font-italic text-grey-darken-4 mt-4">
                 "{{ item.additionalNotes }}"
             </div>
             <span v-else class="text-caption text-grey-lighten-1">No notes provided</span>
