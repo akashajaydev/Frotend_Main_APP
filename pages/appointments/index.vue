@@ -141,9 +141,9 @@ const getRoleTheme = (type: string) => {
                         <v-card-text class="pt-8 pb-4 px-6">
                             <!-- Service Icon & Title -->
                             <div class="d-flex align-start mb-4">
-                                <v-avatar color="primary" variant="tonal" rounded="lg" size="50" class="mr-4">
+                                <!-- <v-avatar color="primary" variant="tonal" rounded="lg" size="50" class="mr-4">
                                      <v-icon icon="mdi-sparkles" size="28" color="primary"></v-icon>
-                                </v-avatar>
+                                </v-avatar> -->
                                 <div>
                                     <div class="text-overline text-primary font-weight-bold mb-n1 text-truncate" style="max-width: 150px;">{{ appt.service }}</div>
                                     <h3 class="text-h6 font-weight-bold text-grey-darken-3 text-truncate" style="max-width: 180px;">{{ appt.customer }}</h3>

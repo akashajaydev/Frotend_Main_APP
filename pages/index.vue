@@ -2,13 +2,13 @@
 import { ref } from 'vue'
 
 const admins = ref([
-  { id: 1, name: 'Baba Ram', email: 'baba@example.com', type: 'Baba', active: true, avatar: '' },
-  { id: 2, name: 'Astro John', email: 'astro@example.com', type: 'Astrologer', active: true, avatar: '' },
-  { id: 3, name: 'Healer Mary', email: 'healer@example.com', type: 'Healer', active: false, avatar: '' },
-  { id: 4, name: 'Baba Shyam', email: 'shyam@example.com', type: 'Baba', active: true, avatar: '' },
-  { id: 5, name: 'Astro Mike', email: 'mike@example.com', type: 'Astrologer', active: true, avatar: '' },
-  { id: 6, name: 'Healer Sarah', email: 'sarah@example.com', type: 'Healer', active: true, avatar: '' },
-  { id: 7, name: 'Baba Ganeshan', email: 'ganeshan@example.com', type: 'Baba', active: false, avatar: '' },
+  { id: 1, name: 'Baba Ram', email: 'baba@example.com', phone: '+91 98765 43210', type: 'Baba', active: true, avatar: '' },
+  { id: 2, name: 'Astro John', email: 'astro@example.com', phone: '+91 98765 43211', type: 'Astrologer', active: true, avatar: '' },
+  { id: 3, name: 'Healer Mary', email: 'healer@example.com', phone: '+91 98765 43212', type: 'Healer', active: false, avatar: '' },
+  { id: 4, name: 'Baba Shyam', email: 'shyam@example.com', phone: '+91 98765 43213', type: 'Baba', active: true, avatar: '' },
+  { id: 5, name: 'Astro Mike', email: 'mike@example.com', phone: '+91 98765 43214', type: 'Astrologer', active: true, avatar: '' },
+  { id: 6, name: 'Healer Sarah', email: 'sarah@example.com', phone: '+91 98765 43215', type: 'Healer', active: true, avatar: '' },
+  { id: 7, name: 'Baba Ganeshan', email: 'ganeshan@example.com', phone: '+91 98765 43216', type: 'Baba', active: false, avatar: '' },
 ])
 
 const search = ref('')
@@ -16,6 +16,7 @@ const createDialog = ref(false)
 const newAdmin = ref({
   name: '',
   email: '',
+  phone: '',
   type: 'Baba',
   password: ''
 })
@@ -23,6 +24,7 @@ const newAdmin = ref({
 const adminTypes = ['Baba', 'Astrologer', 'Healer']
 
 const headers = [
+  { title: 'S.No', key: 'sno', align: 'start' },
   { title: 'Admin', key: 'name', align: 'start' },
   { title: 'Role', key: 'type', align: 'center' },
   { title: 'Status', key: 'active', align: 'center' },
@@ -44,7 +46,7 @@ function createAdmin() {
   console.log('Creating admin:', newAdmin.value)
   createDialog.value = false
   // Reset form
-  newAdmin.value = { name: '', email: '', type: 'Baba', password: '' }
+  newAdmin.value = { name: '', email: '', phone: '', type: 'Baba', password: '' }
 }
 
 function openCreateDialog() {
@@ -109,15 +111,21 @@ function deleteAdmin(item: any) {
         hover
       >
         <!-- Admin Name & Avatar Slot -->
+        <!-- S.No Slot -->
+        <template v-slot:item.sno="{ index }">
+           <div class="text-body-2 font-weight-medium text-grey-darken-2 pl-2">{{ index + 1 }}</div>
+        </template>
+
+        <!-- Admin Name & Avatar Slot -->
         <template v-slot:item.name="{ item }">
           <div class="d-flex align-center py-2">
             <v-avatar size="40" class="mr-3 elevation-2">
-              <v-img v-if="item.avatar" :src="item.avatar" cover></v-img>
-              <v-icon v-else :icon="getRoleTheme(item.type).icon" :color="getRoleTheme(item.type).color" class="bg-grey-lighten-4"></v-icon>
+              <v-img :src="item.avatar || 'https://randomuser.me/api/portraits/men/85.jpg'" cover></v-img>
             </v-avatar>
             <div>
               <div class="text-subtitle-2 font-weight-bold text-grey-darken-3">{{ item.name }}</div>
-              <div class="text-caption text-grey">{{ item.email }}</div>
+              <div class="text-caption text-grey-darken-3">{{ item.email }}</div>
+              <div class="text-caption text-grey-darken-3">{{ item.phone }}</div>
             </div>
           </div>
         </template>
@@ -186,6 +194,15 @@ function deleteAdmin(item: any) {
               label="Email Address"
               prepend-inner-icon="mdi-email"
               type="email"
+              variant="outlined"
+              rounded="lg"
+              class="mb-2"
+            ></v-text-field>
+            <v-text-field
+              v-model="newAdmin.phone"
+              label="Phone Number"
+              prepend-inner-icon="mdi-phone"
+              type="tel"
               variant="outlined"
               rounded="lg"
               class="mb-2"
