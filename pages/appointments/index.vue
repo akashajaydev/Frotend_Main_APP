@@ -2,23 +2,8 @@
 import { ref, computed } from 'vue'
 
 // -- Mock Data --
-const admins = ref([
-  { id: 1, name: 'Baba Ram', email: 'baba@example.com', type: 'Baba', active: true, avatar: '' },
-  { id: 2, name: 'Astro John', email: 'astro@example.com', type: 'Astrologer', active: true, avatar: '' },
-  { id: 3, name: 'Healer Mary', email: 'healer@example.com', type: 'Healer', active: false, avatar: '' },
-  { id: 4, name: 'Baba Shyam', email: 'shyam@example.com', type: 'Baba', active: true, avatar: '' },
-  { id: 5, name: 'Astro Mike', email: 'mike@example.com', type: 'Astrologer', active: true, avatar: '' },
-  { id: 6, name: 'Healer Sarah', email: 'sarah@example.com', type: 'Healer', active: true, avatar: '' },
-  { id: 7, name: 'Baba Ganeshan', email: 'ganeshan@example.com', type: 'Baba', active: false, avatar: '' },
-])
-
-const appointments = ref([
-    { id: 101, customer: 'Alice Smith', service: 'Astrology Reading', date: '2025-10-25 10:00 AM', status: 'Pending', assignedTo: null },
-    { id: 102, customer: 'Bob Jones', service: 'Healing Session', date: '2025-10-26 02:00 PM', status: 'Confirmed', assignedTo: 3 }, // Assigned to Mary
-    { id: 103, customer: 'Charlie Brown', service: 'Baba Consultation', date: '2025-10-27 11:30 AM', status: 'Pending', assignedTo: null },
-    { id: 104, customer: 'Diana Prince', service: 'Astrology Reading', date: '2025-10-28 09:00 AM', status: 'Completed', assignedTo: 2 }, // Assigned to John
-    { id: 105, customer: 'Ethan Hunt', service: 'Healing Session', date: '2025-10-29 03:00 PM', status: 'Pending', assignedTo: null },
-])
+const router = useRouter()
+const { admins, appointments, getAdminById } = useMockData()
 
 // -- State --
 const assignDialog = ref(false)
@@ -61,8 +46,8 @@ function removeAssignment(appt: any) {
     }
 }
 
-function getAdminById(id: number) {
-    return admins.value.find(a => a.id === id)
+function navigateToDetails(id: number) {
+    router.push(`/appointments/${id}`)
 }
 
 function getStatusColor(status: string) {
@@ -127,9 +112,10 @@ const getRoleTheme = (type: string) => {
                 <v-hover v-slot="{ isHovering, props }">
                     <v-card 
                         v-bind="props"
-                        class="appointment-card rounded-xl overflow-visible" 
+                        class="appointment-card rounded-xl overflow-visible cursor-pointer" 
                         :elevation="isHovering ? 8 : 2"
                         :class="{'on-hover': isHovering}"
+                        @click="navigateToDetails(appt.id)"
                     >
                         <!-- Status Badge -->
                         <div class="status-badge">
