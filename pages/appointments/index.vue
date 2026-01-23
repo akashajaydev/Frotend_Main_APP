@@ -5,47 +5,7 @@ import { ref, computed } from 'vue'
 const router = useRouter()
 const { admins, appointments, getAdminById } = useMockData()
 
-// -- State --
-const assignDialog = ref(false)
-const selectedAppointment = ref<any>(null)
-const searchQuery = ref('')
-
-// -- Computed --
-const filteredAdmins = computed(() => {
-    if (!searchQuery.value) return admins.value
-    const lower = searchQuery.value.toLowerCase()
-    return admins.value.filter(a => 
-        a.name.toLowerCase().includes(lower) || 
-        a.type.toLowerCase().includes(lower)
-    )
-})
-
 // -- Methods --
-function openAssignDialog(appt: any) {
-    selectedAppointment.value = appt
-    searchQuery.value = ''
-    assignDialog.value = true
-}
-
-function assignAdmin(admin: any) {
-    if (selectedAppointment.value) {
-        selectedAppointment.value.assignedTo = admin.id
-        // Update status if it was pending
-        if (selectedAppointment.value.status === 'Pending') {
-             selectedAppointment.value.status = 'Confirmed'
-        }
-        assignDialog.value = false
-        selectedAppointment.value = null
-    }
-}
-
-function removeAssignment(appt: any) {
-    appt.assignedTo = null
-    if (appt.status === 'Confirmed') {
-        appt.status = 'Pending'
-    }
-}
-
 function navigateToDetails(id: number) {
     router.push(`/appointments/${id}`)
 }
@@ -58,16 +18,6 @@ function getStatusColor(status: string) {
         case 'Cancelled': return 'error'
         default: return 'grey'
     }
-}
-
-// Reuse role theme helper (could be moved to a composable later)
-const getRoleTheme = (type: string) => {
-  switch (type) {
-    case 'Baba': return { color: 'orange-darken-2', icon: 'mdi-om' }
-    case 'Astrologer': return { color: 'deep-purple-lighten-1', icon: 'mdi-star-four-points' }
-    case 'Healer': return { color: 'teal-lighten-1', icon: 'mdi-hand-heart' }
-    default: return { color: 'grey', icon: 'mdi-account' }
-  }
 }
 </script>
 
@@ -82,7 +32,7 @@ const getRoleTheme = (type: string) => {
                     Appointments
                 </h1>
                 <p class="text-subtitle-1 text-grey-darken-5">
-                    Manage schedule, assign staff, and track appointment status.
+                    Manage schedule and track appointment status.
                 </p>
             </div>
              <!-- Quick Stats -->
@@ -159,51 +109,15 @@ const getRoleTheme = (type: string) => {
                                             {{ getAdminById(appt.assignedTo)?.type }}
                                         </div>
                                      </div>
-                                     
-                                     <!-- Actions -->
-                                     <div class="d-flex flex-column ml-2">
-                                         <v-btn
-                                            icon
-                                            size="x-small"
-                                            density="comfortable"
-                                            variant="plain"
-                                            color="grey-darken-3"
-                                            @click="openAssignDialog(appt)"
-                                        >
-                                            <v-icon icon="mdi-pencil-outline" />
-                                            <v-tooltip activator="parent" location="top">Change</v-tooltip>
-                                        </v-btn>
-
-                                        <v-btn
-                                            icon
-                                            size="x-small"
-                                            density="comfortable"
-                                            variant="plain"
-                                            color="error"
-                                            @click="removeAssignment(appt)"
-                                        >
-                                            <v-icon icon="mdi-close-circle-outline" />
-                                            <v-tooltip activator="parent" location="top">Remove</v-tooltip>
-                                        </v-btn>
-                                     </div>
                                 </div>
                             </div>
 
                             <!-- Unassigned State -->
-                            <div v-else class="unassigned-state rounded-lg pa-4 text-center border border-opacity-50 border-primary bg-blue-grey-lighten-5">
-                                <!-- <div class="text-body-2 text-grey-darken-1 mb-2">No specialist assigned yet</div> -->
-                                <v-btn 
-                                    block 
-                                    rounded="lg" 
-                                    color="primary" 
-                                    variant="flat" 
-                                    elevation="1"
-                                    prepend-icon="mdi-account-plus" 
-                                    @click="openAssignDialog(appt)"
-                                    class="text-none font-weight-bold"
-                                >
-                                    Assign Now
-                                </v-btn>
+                            <div v-else class="unassigned-state rounded-lg pa-4 text-center border border-opacity-50 border-grey bg-grey-lighten-5">
+                                <div class="text-body-2 text-primary font-weight-medium d-flex align-center justify-center">
+                                    <v-icon icon="mdi-account-off-outline" start size="small"></v-icon>
+                                    No specialist assigned
+                                </div>
                             </div>
                         </v-card-text>
                     </v-card>
@@ -211,109 +125,6 @@ const getRoleTheme = (type: string) => {
             </v-col>
         </v-row>
     </div>
-
-    <!-- Assignment Dialog -->
-    <v-dialog v-model="assignDialog" max-width="550px" transition="dialog-bottom-transition">
-        <v-card class="rounded-xl overflow-hidden bg-white">
-            <v-toolbar color="primary" class="px-4">
-                 <v-icon icon="mdi-account-search" class="mr-2"></v-icon>
-                 <v-toolbar-title class="text-h6 font-weight-bold">Assign Specialist</v-toolbar-title>
-                 <v-btn icon="mdi-close" variant="text" @click="assignDialog = false"></v-btn>
-            </v-toolbar>
-
-            <div class="pa-5 bg-grey-lighten-5">
-                 <div v-if="selectedAppointment" class="mb-4 d-flex align-center">
-                    <v-avatar color="white" class="elevation-1 mr-3">
-                        <v-icon icon="mdi-calendar-check" color="primary"></v-icon>
-                    </v-avatar>
-                    <div>
-                        <div class="text-caption text-grey font-weight-bold">Target Appointment</div>
-                        <div class="text-body-1 font-weight-bold text-grey-darken-3">{{ selectedAppointment.customer }} <span class="text-grey mx-1">•</span> {{ selectedAppointment.service }}</div>
-                    </div>
-                 </div>
-
-                <v-text-field
-                    v-model="searchQuery"
-                    prepend-inner-icon="mdi-magnify"
-                    label="Search available staff..."
-                    placeholder="Type name or role (e.g. 'Baba')"
-                    variant="solo"
-                    density="comfortable"
-                    bg-color="white"
-                    rounded="lg"
-                    hide-details
-                    class="elevation-1"
-                ></v-text-field>
-            </div>
-            
-            <v-divider></v-divider>
-
-            <v-list class="pa-2 bg-white" max-height="400" style="overflow-y: auto;">
-                <div class="text-caption font-weight-bold text-grey ml-4 mt-2 mb-2">AVAILABLE STAFF</div>
-                <template v-if="filteredAdmins.length > 0">
-                    <v-list-item
-                        v-for="admin in filteredAdmins"
-                        :key="admin.id"
-                        @click="assignAdmin(admin)"
-                        rounded="lg"
-                        class="mb-2 admin-list-item mx-2 border-thin"
-                        lines="two"
-                        :disabled="!admin.active"
-                        :base-color="admin.active ? 'white' : 'grey-lighten-4'"
-                    >
-                        <template v-slot:prepend>
-                             <v-badge 
-                                dot 
-                                :color="admin.active ? 'success' : 'grey'"
-                                location="bottom right"
-                                offset-x="5"
-                                offset-y="5"
-                            >
-                                <v-avatar size="50" class="border elevation-1">
-                                    <v-img :src="admin.avatar || 'https://randomuser.me/api/portraits/men/85.jpg'" cover></v-img>
-                                </v-avatar>
-                            </v-badge>
-                        </template>
-
-                        <v-list-item-title class="font-weight-bold text-body-1 ml-2" style="color: #212121">{{ admin.name }}</v-list-item-title>
-                        <v-list-item-subtitle class="d-flex align-center mt-1 ml-2">
-                            <v-chip size="x-small" :color="getRoleTheme(admin.type).color" variant="tonal" class="mr-2 font-weight-bold">
-                                {{ admin.type }}
-                            </v-chip>
-                            <span v-if="!admin.active" class="text-error text-caption font-weight-medium">
-                                <v-icon icon="mdi-cancel" size="small" start></v-icon>Unavailable
-                            </span>
-                        </v-list-item-subtitle>
-                        
-                        <template v-slot:append>
-                            <v-btn 
-                                v-if="selectedAppointment?.assignedTo === admin.id" 
-                                color="success" 
-                                variant="tonal" 
-                                size="small" 
-                                class="font-weight-bold"
-                                prepend-icon="mdi-check"
-                            >
-                                Assigned
-                            </v-btn>
-                            <v-btn 
-                                v-else-if="admin.active"
-                                variant="text" 
-                                color="primary" 
-                                icon="mdi-chevron-right"
-                            ></v-btn>
-                        </template>
-                    </v-list-item>
-                </template>
-                <div v-else class="text-center py-12">
-                    <v-icon icon="mdi-account-off-outline" size="64" color="grey-lighten-2" class="mb-4"></v-icon>
-                    <div class="text-h6 text-grey">No matches found</div>
-                    <div class="text-body-2 text-grey-lighten-1">Try searching for a different name or role</div>
-                </div>
-            </v-list>
-        </v-card>
-    </v-dialog>
-
   </v-container>
 </template>
 
@@ -344,19 +155,6 @@ const getRoleTheme = (type: string) => {
     transition: background-color 0.2s;
 }
 
-.assigned-card:hover {
-    background-color: #FAFAFA !important;
-}
-
-.admin-list-item {
-    transition: all 0.2s;
-}
-
-.admin-list-item:hover {
-    background-color: #F5F5F5;
-    transform: translateX(4px);
-}
-
 .gap-4 {
     gap: 16px;
 }
@@ -367,6 +165,4 @@ const getRoleTheme = (type: string) => {
 .dark-page {
   background-color: #f0ecec; /* near-black */
 }
-
-
 </style>

@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 
 const route = useRoute()
 const router = useRouter()
-const { getAppointmentById, getAdminById } = useMockData()
+const { getAppointmentById, getAdminById, admins } = useMockData()
 
 const appointmentId = Number(route.params.id)
 const appointment = getAppointmentById(appointmentId)
@@ -16,6 +16,42 @@ if (!appointment) {
 const assignedAdmin = computed(() => {
     return appointment?.assignedTo ? getAdminById(appointment.assignedTo) : null
 })
+
+// -- Assignment State --
+const assignDialog = ref(false)
+const searchQuery = ref('')
+const filteredAdmins = computed(() => {
+    if (!searchQuery.value) return admins.value
+    const lower = searchQuery.value.toLowerCase()
+    return admins.value.filter(a => 
+        a.name.toLowerCase().includes(lower) || 
+        a.type.toLowerCase().includes(lower)
+    )
+})
+
+function openAssignDialog() {
+    searchQuery.value = ''
+    assignDialog.value = true
+}
+
+function assignAdmin(admin: any) {
+    if (appointment) {
+        appointment.assignedTo = admin.id
+        if (appointment.status === 'Pending') {
+             appointment.status = 'Confirmed'
+        }
+        assignDialog.value = false
+    }
+}
+
+function removeAssignment() {
+    if (appointment) {
+        appointment.assignedTo = null
+        if (appointment.status === 'Confirmed') {
+            appointment.status = 'Pending'
+        }
+    }
+}
 
 // -- Chat State --
 const newMessage = ref('')
@@ -54,6 +90,15 @@ function getStatusColor(status: string) {
         case 'Cancelled': return 'error'
         default: return 'grey'
     }
+}
+
+const getRoleTheme = (type: string) => {
+  switch (type) {
+    case 'Baba': return { color: 'orange-darken-2', icon: 'mdi-om' }
+    case 'Astrologer': return { color: 'deep-purple-lighten-1', icon: 'mdi-star-four-points' }
+    case 'Healer': return { color: 'teal-lighten-1', icon: 'mdi-hand-heart' }
+    default: return { color: 'grey', icon: 'mdi-account' }
+  }
 }
 </script>
 
@@ -120,7 +165,16 @@ function getStatusColor(status: string) {
                 <v-col cols="12" md="5" lg="4">
                     <!-- Specialist Profile -->
                     <v-card class="rounded-xl overflow-hidden elevation-2 mb-4" v-if="assignedAdmin">
-                        <div class="bg-primary pa-4 text-center">
+                        <div class="bg-primary pa-4 text-center position-relative">
+                            <v-btn icon="mdi-pencil" size="small" variant="text" color="white" class="position-absolute top-0 right-0 ma-2" @click="openAssignDialog">
+                                <v-icon icon="mdi-pencil"></v-icon>
+                                <v-tooltip activator="parent" location="bottom">Change Specialist</v-tooltip>
+                            </v-btn>
+                             <v-btn icon="mdi-close-circle" size="small" variant="text" color="white" class="position-absolute top-0 left-0 ma-2" @click="removeAssignment">
+                                <v-icon icon="mdi-close-circle"></v-icon>
+                                <v-tooltip activator="parent" location="bottom">Remove Assignment</v-tooltip>
+                            </v-btn>
+
                             <v-avatar size="80" class="border-lg border-white elevation-2 mb-2">
                                 <v-img :src="assignedAdmin.avatar || 'https://randomuser.me/api/portraits/men/85.jpg'" cover></v-img>
                             </v-avatar>
@@ -134,6 +188,7 @@ function getStatusColor(status: string) {
                          <v-icon icon="mdi-account-alert-outline" size="48" color="grey"></v-icon>
                          <div class="text-h6 text-grey-darken-2 mt-2">No Specialist Assigned</div>
                          <div class="text-body-2 text-grey mb-4">Assign a specialist to enable chat.</div>
+                         <v-btn color="primary" rounded="lg" prepend-icon="mdi-plus" @click="openAssignDialog">Assign Now</v-btn>
                     </v-card>
 
                     <!-- Chat Interface -->
@@ -173,6 +228,108 @@ function getStatusColor(status: string) {
                 </v-col>
             </v-row>
         </div>
+
+        <!-- Assignment Dialog -->
+        <v-dialog v-model="assignDialog" max-width="550px" transition="dialog-bottom-transition">
+            <v-card class="rounded-xl overflow-hidden bg-white">
+                <v-toolbar color="primary" class="px-4">
+                     <v-icon icon="mdi-account-search" class="mr-2"></v-icon>
+                     <v-toolbar-title class="text-h6 font-weight-bold">Assign Specialist</v-toolbar-title>
+                     <v-btn icon="mdi-close" variant="text" @click="assignDialog = false"></v-btn>
+                </v-toolbar>
+
+                <div class="pa-5 bg-grey-lighten-5">
+                     <div class="mb-4 d-flex align-center">
+                        <v-avatar color="white" class="elevation-1 mr-3">
+                            <v-icon icon="mdi-calendar-check" color="primary"></v-icon>
+                        </v-avatar>
+                        <div>
+                            <div class="text-caption text-grey font-weight-bold">Target Appointment</div>
+                            <div class="text-body-1 font-weight-bold text-grey-darken-3">{{ appointment.customer }} <span class="text-grey mx-1">•</span> {{ appointment.service }}</div>
+                        </div>
+                     </div>
+
+                    <v-text-field
+                        v-model="searchQuery"
+                        prepend-inner-icon="mdi-magnify"
+                        label="Search available staff..."
+                        placeholder="Type name or role (e.g. 'Baba')"
+                        variant="solo"
+                        density="comfortable"
+                        bg-color="white"
+                        rounded="lg"
+                        hide-details
+                        class="elevation-1"
+                    ></v-text-field>
+                </div>
+                
+                <v-divider></v-divider>
+
+                <v-list class="pa-2 bg-white" max-height="400" style="overflow-y: auto;">
+                    <div class="text-caption font-weight-bold text-grey ml-4 mt-2 mb-2">AVAILABLE STAFF</div>
+                    <template v-if="filteredAdmins.length > 0">
+                        <v-list-item
+                            v-for="admin in filteredAdmins"
+                            :key="admin.id"
+                            @click="assignAdmin(admin)"
+                            rounded="lg"
+                            class="mb-2 admin-list-item mx-2 border-thin"
+                            lines="two"
+                            :disabled="!admin.active"
+                            :base-color="admin.active ? 'white' : 'grey-lighten-4'"
+                        >
+                            <template v-slot:prepend>
+                                 <v-badge 
+                                    dot 
+                                    :color="admin.active ? 'success' : 'grey'"
+                                    location="bottom right"
+                                    offset-x="5"
+                                    offset-y="5"
+                                >
+                                    <v-avatar size="50" class="border elevation-1">
+                                        <v-img :src="admin.avatar || 'https://randomuser.me/api/portraits/men/85.jpg'" cover></v-img>
+                                    </v-avatar>
+                                </v-badge>
+                            </template>
+
+                            <v-list-item-title class="font-weight-bold text-body-1 ml-2" style="color: #212121">{{ admin.name }}</v-list-item-title>
+                            <v-list-item-subtitle class="d-flex align-center mt-1 ml-2">
+                                <v-chip size="x-small" :color="getRoleTheme(admin.type).color" variant="tonal" class="mr-2 font-weight-bold">
+                                    {{ admin.type }}
+                                </v-chip>
+                                <span v-if="!admin.active" class="text-error text-caption font-weight-medium">
+                                    <v-icon icon="mdi-cancel" size="small" start></v-icon>Unavailable
+                                </span>
+                            </v-list-item-subtitle>
+                            
+                            <template v-slot:append>
+                                <v-btn 
+                                    v-if="appointment.assignedTo === admin.id" 
+                                    color="success" 
+                                    variant="tonal" 
+                                    size="small" 
+                                    class="font-weight-bold"
+                                    prepend-icon="mdi-check"
+                                >
+                                    Assigned
+                                </v-btn>
+                                <v-btn 
+                                    v-else-if="admin.active"
+                                    variant="text" 
+                                    color="primary" 
+                                    icon="mdi-chevron-right"
+                                ></v-btn>
+                            </template>
+                        </v-list-item>
+                    </template>
+                    <div v-else class="text-center py-12">
+                        <v-icon icon="mdi-account-off-outline" size="64" color="grey-lighten-2" class="mb-4"></v-icon>
+                        <div class="text-h6 text-grey">No matches found</div>
+                        <div class="text-body-2 text-grey-lighten-1">Try searching for a different name or role</div>
+                    </div>
+                </v-list>
+            </v-card>
+        </v-dialog>
     </v-container>
 </template>
 
@@ -193,5 +350,14 @@ function getStatusColor(status: string) {
 }
 .search-text {
     line-height: 1.6;
+}
+/* Reused from index.vue */
+.admin-list-item {
+    transition: all 0.2s;
+}
+
+.admin-list-item:hover {
+    background-color: #F5F5F5;
+    transform: translateX(4px);
 }
 </style>
