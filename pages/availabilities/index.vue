@@ -31,10 +31,14 @@ const generateDummySlots = () => {
             const endH = endHVal.toString().padStart(2, '0')
             const endM = endMVal.toString().padStart(2, '0')
 
+            const isUnavailable = Math.random() < 0.3 // Randomly unavailable
+
             slots.push({
                 start: `${startH}:${startM}`,
                 end: `${endH}:${endM}`,
-                unavailable: Math.random() < 0.3 // Randomly unavailable
+                unavailable: isUnavailable,
+                // If unavailable, 30% chance it has an order (Booked)
+                order: isUnavailable && Math.random() < 0.3 ? '65c1a9f0e12a4c' + Math.floor(Math.random() * 1000) : undefined
             })
         }
     }
@@ -70,9 +74,17 @@ async function fetchAvailabilities() {
 async function toggleAvailability(slot: any) {
   if (saving.value) return
   
+  // Don't allow interacting with booked slots if that's the desired behavior, 
+  // but usually admin can override. Let's warn or just process it.
+  // For now, simple toggle.
+  
   // Optimistic update for UI responsiveness
   const originalState = slot.unavailable
   slot.unavailable = !slot.unavailable
+  if (!slot.unavailable) {
+      // If making available, remove order info from UI immediately
+      slot.order = undefined 
+  }
   
   saving.value = true
   
@@ -84,24 +96,14 @@ async function toggleAvailability(slot: any) {
   }
 
   // Logic: The API expects what we WANT to do.
-  // If currently unavailable (originalState=true), we want to make it available.
-  // wait, the previous code logic was:
-  /*
-  if (isUnavailable) {
-    payload.available = ...
-  } else {
-    payload.unavailable = ...
-  }
-  */
- 
   if (originalState) {
-      // It was unavailable, so we are sending an "available" payload to open it up
+    // It was unavailable, so we are sending an "available" payload to open it up
     payload.available = {
       start: slot.start,
       end: slot.end
     }
   } else {
-      // It was available, so we are sending an "unavailable" payload to block it
+    // It was available, so we are sending an "unavailable" payload to block it
     payload.unavailable = {
       start: slot.start,
       end: slot.end
@@ -115,11 +117,11 @@ async function toggleAvailability(slot: any) {
     })
     
     if (ok) {
-        // API success, we can update specific fields if returned, or just trust our optimistic update
-         if (json.availabilities && json.availabilities.timings) {
-             timings.value = json.availabilities.timings
-         }
-         snack.success('Availability updated')
+      // API success
+      if (json.availabilities && json.availabilities.timings) {
+         timings.value = json.availabilities.timings
+      }
+      snack.success('Availability updated')
     } else {
          // Revert on failure
          slot.unavailable = originalState
@@ -129,7 +131,6 @@ async function toggleAvailability(slot: any) {
   } catch (e) {
     console.error(e)
     // Revert on failure, or keep if dummy mode
-    // slot.unavailable = originalState
     snack.info('Dummy mode: Updated locally')
   } finally {
     saving.value = false
@@ -147,8 +148,6 @@ onMounted(() => {
 
 // Helper for display
 const formatTime = (time: string) => {
-    // Simple 12h or 24h format if needed, but "00:00" is fine.
-    // If user wants AM/PM we can convert. "00:00" -> "12:00 AM"
     return moment(time, 'HH:mm').format('h:mm A')
 }
 </script>
@@ -191,22 +190,37 @@ const formatTime = (time: string) => {
             <v-card
                 v-for="(slot, i) in timings"
                 :key="i"
-                :color="slot.unavailable ? 'grey-lighten-3' : 'green-lighten-5'"
+                :color="slot.unavailable ? (slot.order ? 'deep-purple-lighten-5' : 'grey-lighten-3') : 'green-lighten-5'"
                 class="time-slot-card d-flex align-center justify-center pa-3 cursor-pointer transition-swing"
-                :class="{'unavailable': slot.unavailable, 'elevation-2': !slot.unavailable}"
+                :class="{
+                    'unavailable': slot.unavailable && !slot.order, 
+                    'booked': slot.unavailable && slot.order,
+                    'elevation-2': !slot.unavailable
+                }"
                 @click="toggleAvailability(slot)"
                 variant="flat"
                 :disabled="saving"
             >
                 <div class="text-center">
-                    <div class="text-subtitle-2 font-weight-bold" :class="slot.unavailable ? 'text-grey' : 'text-green-darken-3'">
+                    <div class="text-subtitle-2 font-weight-bold" 
+                         :class="slot.unavailable ? (slot.order ? 'text-deep-purple-darken-3' : 'text-grey') : 'text-green-darken-3'">
                         {{ formatTime(slot.start) }} - {{ formatTime(slot.end) }}
                     </div>
                     <div class="text-caption mt-1">
-                        <v-icon size="small" :icon="slot.unavailable ? 'mdi-close-circle-outline' : 'mdi-check-circle-outline'" :color="slot.unavailable ? 'grey' : 'success'"></v-icon>
-                        <span class="ml-1" :class="slot.unavailable ? 'text-grey' : 'text-success'">
-                            {{ slot.unavailable ? 'Unavailable' : 'Available' }}
-                        </span>
+                         <template v-if="slot.unavailable">
+                             <template v-if="slot.order">
+                                 <v-icon size="small" icon="mdi-calendar-check" color="deep-purple-darken-2"></v-icon>
+                                 <span class="ml-1 text-deep-purple-darken-2 font-weight-bold">Booked</span>
+                             </template>
+                             <template v-else>
+                                 <v-icon size="small" icon="mdi-block-helper" color="grey"></v-icon>
+                                 <span class="ml-1 text-grey">Blocked</span>
+                             </template>
+                         </template>
+                         <template v-else>
+                             <v-icon size="small" icon="mdi-check-circle-outline" color="success"></v-icon>
+                             <span class="ml-1 text-success">Available</span>
+                         </template>
                     </div>
                 </div>
             </v-card>
@@ -239,7 +253,12 @@ const formatTime = (time: string) => {
     opacity: 0.8;
 }
 
-.time-slot-card.unavailable:hover {
+.time-slot-card.booked {
+    border: 1px solid #d1c4e9;
+    background-color: #ede7f6 !important;
+}
+
+.time-slot-card.unavailable:hover, .time-slot-card.booked:hover {
     border-color: #9e9e9e;
     opacity: 1;
 }
