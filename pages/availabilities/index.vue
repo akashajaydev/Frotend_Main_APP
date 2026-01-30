@@ -156,7 +156,7 @@ const formatTime = (time: string) => {
   <v-container fluid class="pa-6">
     <div class="d-flex flex-column flex-md-row justify-space-between align-md-center mb-6">
       <div>
-        <h1 class="text-h4 font-weight-bold text-grey-darken-3">User Availabilities</h1>
+        <h1 class="text-h4 font-weight-bold text-grey-darken-3">Availabilities</h1>
         <p class="text-subtitle-1 text-grey">Manage availability slots for {{ moment(date).format('MMMM Do YYYY') }}</p>
       </div>
       

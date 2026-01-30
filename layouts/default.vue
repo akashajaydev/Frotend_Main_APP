@@ -62,7 +62,7 @@ function goto(path: string) {
 						<v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" value="dashboard"
 							:active="route.path === '/dashboard'" @click="goto('/dashboard')"
 							active-class="bg-black text-white" rounded="xl" class="mb-1" />
-						<v-list-item prepend-icon="mdi-package-variant" title="Products" value="products"
+						<v-list-item prepend-icon="mdi-package-variant" title="Services" value="products"
 							:active="route.path.startsWith('/products')" @click="goto('/products')"
 							active-class="bg-black text-white" rounded="xl" class="mb-1" />
 

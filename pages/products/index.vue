@@ -374,7 +374,7 @@ const getPrice = (pricings: any[], country: string) => {
   <v-container fluid class="pa-6">
     <div class="d-flex flex-column flex-md-row justify-space-between align-md-center mb-8 gap-4">
       <div>
-        <h1 class="text-h4 font-weight-bold text-grey-darken-3">Products</h1>
+        <h1 class="text-h4 font-weight-bold text-grey-darken-3">Services</h1>
         <p class="text-subtitle-1 text-grey">Manage your astrology services and items</p>
       </div>
       <div>
