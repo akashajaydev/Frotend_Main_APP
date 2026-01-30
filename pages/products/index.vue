@@ -30,7 +30,7 @@ async function loadProducts() {
     // For now, I'll mock the fetch or assume a proxy is set up. 
     // Since I don't have the backend URL, I'll write the fetch logic to be easily adaptable.
     
-    const response = await fetch(`https://api.example.com/products?page=${page.value}&limit=${itemsPerPage.value}`) // Placeholder URL
+    // const response = await fetch(`https://api.example.com/products?page=${page.value}&limit=${itemsPerPage.value}`) // Placeholder URL
     // mocking response for now if fetch fails, or just structure it for the real backend
     
     // real implementation
