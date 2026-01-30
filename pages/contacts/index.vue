@@ -54,7 +54,8 @@ const search = ref('')
 const headers = [
   { title: 'No.', key: 'id', align: 'start' },
   { title: 'Name', key: 'name', align: 'start' },
-  { title: 'Contact Details', key: 'email', align: 'start' },
+  { title: 'Email', key: 'email', align: 'start' },
+  { title: 'Phone', key: 'contactNumber', align: 'start' },
   { title: 'Address', key: 'address', align: 'start' },
   { title: 'Notes', key: 'additionalNotes', align: 'start' },
   { title: 'Date', key: 'date', align: 'end' },
@@ -102,17 +103,19 @@ const headers = [
           <div class="font-weight-bold text-grey-darken-3 mt-5">{{ item.name }}</div>
         </template>
 
-        <!-- Contact Details Slot -->
+        <!-- Email Slot -->
         <template v-slot:item.email="{ item }">
-          <div>
-            <div class="d-flex align-center">
-                <v-icon size="small" class="mr-1 mt-5" color="primary">mdi-email-outline</v-icon>
-                <span class="text-body-2 mt-5">{{ item.email }}</span>
-            </div>
-            <div class="d-flex align-center mt-1">
-                <v-icon size="small" class="mr-1 mb-4" color="success">mdi-phone-outline</v-icon>
-                <span class="text-body-2 mb-4">{{ item.contactNumber }}</span>
-            </div>
+          <div class="d-flex align-center">
+              <v-icon size="small" class="mr-1 mt-5" color="primary">mdi-email-outline</v-icon>
+              <span class="text-body-2 mt-5">{{ item.email }}</span>
+          </div>
+        </template>
+
+        <!-- Phone Slot -->
+        <template v-slot:item.contactNumber="{ item }">
+          <div class="d-flex align-center">
+              <v-icon size="small" class="mr-1 mt-5" color="success">mdi-phone-outline</v-icon>
+              <span class="text-body-2 mt-5">{{ item.contactNumber }}</span>
           </div>
         </template>
         
