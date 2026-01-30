@@ -220,6 +220,7 @@ const getRoleTheme = (type: string) => {
                                 @keyup.enter="sendMessage"
                             >
                                 <template v-slot:append-inner>
+                                    <v-btn icon="mdi-microphone" variant="text" color="grey-darken-1" density="compact" class="mr-1"></v-btn>
                                     <v-btn icon="mdi-send" variant="text" color="primary" density="compact" @click="sendMessage"></v-btn>
                                 </template>
                             </v-text-field>
