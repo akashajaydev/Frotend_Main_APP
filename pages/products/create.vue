@@ -1,151 +1,190 @@
 <script setup lang="ts">
-import { useProductStore } from '~/stores/product'
-
-const productStore = useProductStore()
-const snack = useSnackStore()
+import { ref, computed } from 'vue'
 
 const valid = ref(false)
-const form = ref<any>(null)
+const loading = ref(false)
 
 const product = ref({
-    name: '',
-    category: null,
-    price: null,
-    description: '',
-    status: 'Active',
-    image: null
+  _id: '',
+  label: '',
+  root: '',
+  parent: '',
+  minimumDelayInDays: 1,
+  pricings: [
+    { country: 'US', value: 0 },
+    { country: 'IN', value: 0 },
+    { country: 'UK', value: 0 },
+  ]
 })
 
-const categories = ['Astrology', 'Yagya', 'Healings', 'Vaastu']
-const statusOptions = ['Active', 'Inactive']
-
-const nameRules = [
-    (v: string) => !!v || 'Name is required',
-    (v: string) => (v && v.length <= 50) || 'Name must be less than 50 characters',
-]
-
-const categoryRules = [
-    (v: string) => !!v || 'Category is required',
-]
-
-const priceRules = [
-    (v: any) => !!v || 'Price is required',
-    (v: any) => v > 0 || 'Price must be greater than 0',
-]
-
-async function submit() {
-    const { valid } = await form.value.validate()
-
-    if (valid) {
-        productStore.addProduct({
-            name: product.value.name,
-            category: product.value.category!, // validated
-            price: Number(product.value.price),
-            description: product.value.description,
-            status: product.value.status as 'Active' | 'Inactive',
-        })
-        
-        snack.success('Product created successfully')
-        navigateTo('/products')
+// Auto-generate ID from Label if ID is empty
+function onLabelChange() {
+    if (!product.value._id && product.value.label) {
+        product.value._id = product.value.label
+            .toLowerCase()
+            .replace(/ /g, '-')
+            .replace(/[^\w-]+/g, '')
     }
 }
+
+const countryOptions = ['US', 'IN', 'UK', 'CA', 'AU', 'EU', 'middle-east']
+
+function addPricing() {
+    product.value.pricings.push({ country: '', value: 0 })
+}
+
+function removePricing(index: number) {
+    product.value.pricings.splice(index, 1)
+}
+
+async function createProduct() {
+  if (!valid.value) return
+  loading.value = true
+  
+  try {
+      // API Call
+      // await $fetch('/products', { method: 'POST', body: product.value })
+      
+      console.log('Creating Product:', product.value)
+      
+      // Navigate to details or list
+      // For now, list
+      navigateTo('/products')
+      
+  } catch (error) {
+      console.error('Error creating product', error)
+  } finally {
+      loading.value = false
+  }
+}
+
 </script>
 
 <template>
-    <v-container fluid class="pa-6">
-        <div class="mb-6 d-flex align-center">
-             <v-btn icon="mdi-arrow-left" variant="text" @click="navigateTo('/products')" class="me-2"></v-btn>
-            <div>
-                <h1 class="text-h4 font-weight-bold text-grey-darken-3">Create Product</h1>
-                <p class="text-subtitle-1 text-grey">Add a new service or product to your catalog</p>
-            </div>
-        </div>
+  <v-container fluid class="pa-6">
+    <div class="mb-6">
+       <v-btn variant="text" prepend-icon="mdi-arrow-left" @click="navigateTo('/products')" class="text-none text-grey-darken-2">Back to Products</v-btn>
+    </div>
+    
+    <div class="mb-8">
+      <h1 class="text-h4 font-weight-bold text-grey-darken-3">Create New Product</h1>
+      <p class="text-subtitle-1 text-grey">Add a new astrology service</p>
+    </div>
 
-        <v-row>
-            <v-col cols="12" md="8" lg="6">
-                <v-card elevation="2" rounded="xl" class="pa-6">
-                    <v-form ref="form" v-model="valid">
-                        <v-text-field
-                            v-model="product.name"
-                            :rules="nameRules"
-                            label="Product Name"
-                            variant="outlined"
-                            required
-                            class="mb-2"
-                        ></v-text-field>
+    <v-form v-model="valid" @submit.prevent="createProduct">
+      <v-row>
+        <v-col cols="12" md="8">
+          <v-card elevation="2" rounded="xl" class="pa-6 mb-6">
+            <h2 class="text-h6 font-weight-bold mb-4">Basic Information</h2>
+            
+            <v-text-field
+              v-model="product.label"
+              label="Product Label"
+              variant="outlined"
+              rounded="lg"
+              :rules="[v => !!v || 'Label is required']"
+              @update:model-value="onLabelChange"
+              class="mb-2"
+            ></v-text-field>
 
-                        <v-select
-                            v-model="product.category"
-                            :items="categories"
-                            :rules="categoryRules"
-                            label="Category"
-                            variant="outlined"
-                            required
-                            class="mb-2"
-                        ></v-select>
+            <v-text-field
+              v-model="product._id"
+              label="Product ID (Slug)"
+              variant="outlined"
+              rounded="lg"
+              :rules="[v => !!v || 'ID is required']"
+              hint="Unique identifier used in URLs"
+              persistent-hint
+              class="mb-4"
+            ></v-text-field>
 
-                        <v-row>
-                            <v-col cols="12" sm="6">
-                                <v-text-field
-                                    v-model="product.price"
-                                    :rules="priceRules"
-                                    label="Price (₹)"
-                                    type="number"
-                                    variant="outlined"
-                                    prefix="₹"
-                                    required
-                                    class="mb-2"
-                                ></v-text-field>
-                            </v-col>
-                            <v-col cols="12" sm="6">
-                                <v-select
-                                    v-model="product.status"
-                                    :items="statusOptions"
-                                    label="Status"
-                                    variant="outlined"
-                                    required
-                                    class="mb-2"
-                                ></v-select>
-                            </v-col>
-                        </v-row>
+            <v-row>
+                <v-col cols="12" md="6">
+                     <v-text-field
+                        v-model="product.root"
+                        label="Root Category"
+                        placeholder="e.g., Aura Scan"
+                        variant="outlined"
+                        rounded="lg"
+                        :rules="[v => !!v || 'Root category is required']"
+                    ></v-text-field>
+                </v-col>
+                <v-col cols="12" md="6">
+                     <v-text-field
+                        v-model="product.parent"
+                        label="Parent Category"
+                        placeholder="e.g., Aura Scan"
+                        variant="outlined"
+                        rounded="lg"
+                    ></v-text-field>
+                </v-col>
+            </v-row>
 
-                        <v-textarea
-                            v-model="product.description"
-                            label="Description"
-                            variant="outlined"
-                            rows="4"
-                            class="mb-4"
-                        ></v-textarea>
-                        
-                         <v-file-input
-                            label="Product Image (Optional)"
-                            variant="outlined"
-                            prepend-icon="mdi-camera"
-                            density="compact"
-                            class="mb-6"
-                        ></v-file-input>
+            <v-text-field
+              v-model.number="product.minimumDelayInDays"
+              label="Minimum Delay (Days)"
+              type="number"
+              variant="outlined"
+              rounded="lg"
+              class="mt-2"
+            ></v-text-field>
 
-                        <div class="d-flex justify-end">
-                            <v-btn variant="text" size="large" class="mr-2" @click="navigateTo('/products')">Cancel</v-btn>
-                            <v-btn
-                                color="primary"
-                                size="large"
-                                rounded="lg"
-                                elevation="2"
-                                @click="submit"
-                            >
-                                Create Product
-                            </v-btn>
-                        </div>
-                    </v-form>
-                </v-card>
-            </v-col>
-        </v-row>
-    </v-container>
+          </v-card>
+        </v-col>
+
+        <v-col cols="12" md="4">
+           <v-card elevation="2" rounded="xl" class="pa-6">
+              <div class="d-flex justify-space-between align-center mb-4">
+                  <h2 class="text-h6 font-weight-bold">Pricing</h2>
+                  <v-btn size="small" variant="text" color="primary" icon="mdi-plus" @click="addPricing"></v-btn>
+              </div>
+
+              <div v-for="(price, index) in product.pricings" :key="index" class="d-flex gap-2 align-center mb-3">
+                  <v-select
+                    v-model="price.country"
+                    :items="countryOptions"
+                    label="Country"
+                    variant="outlined"
+                    density="compact"
+                    rounded="lg"
+                    hide-details
+                    style="max-width: 120px;"
+                  ></v-select>
+                  <v-text-field
+                    v-model.number="price.value"
+                    label="Price"
+                    type="number"
+                    variant="outlined"
+                    density="compact"
+                    rounded="lg"
+                    hide-details
+                    prefix="$" 
+                  ></v-text-field>
+                  <v-btn icon="mdi-delete-outline" size="small" variant="text" color="error" @click="removePricing(index)"></v-btn>
+              </div>
+           </v-card>
+        </v-col>
+      </v-row>
+
+      <div class="d-flex justify-end mt-4">
+          <v-btn
+            color="primary"
+            size="large"
+            rounded="xl"
+            elevation="4"
+            type="submit"
+            :loading="loading"
+            class="px-8 font-weight-bold"
+          >
+            Create Product
+          </v-btn>
+      </div>
+    </v-form>
+  </v-container>
 </template>
 
 <style scoped>
-.v-container {
-    font-family: 'Montserrat', sans-serif;
+.gap-2 {
+    gap: 8px;
 }
 </style>
