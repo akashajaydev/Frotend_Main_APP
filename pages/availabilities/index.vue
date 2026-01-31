@@ -86,80 +86,121 @@ const deleteSchedule = (id: string) => {
 </script>
 
 <template>
-  <v-container fluid class="pa-6">
-    <div class="d-flex justify-space-between align-center mb-6">
+  <v-container fluid class="pa-8">
+    <div class="d-flex flex-column flex-md-row justify-space-between align-md-center mb-8 gap-4">
         <div>
-            <h1 class="text-h4 font-weight-bold text-grey-darken-3">Availability</h1>
-            <p class="text-subtitle-1 text-grey">Configure times when you are available for bookings.</p>
+            <h1 class="text-h4 font-weight-bold text-grey-darken-4 mb-2">Availability</h1>
+            <p class="text-subtitle-1 text-grey-darken-1" style="max-width: 600px; line-height: 1.6;">
+                Configure your weekly schedule and override specific dates to manage when you are available for bookings.
+            </p>
         </div>
         <div class="d-flex align-center gap-4">
-             <v-btn-toggle
+            <!-- 
+            <v-btn-toggle
                 model-value="my"
                 mandatory
-                rounded="lg"
+                rounded="xl"
                 color="grey-darken-3"
                 variant="outlined"
-                density="compact"
-                class="border"
+                density="comfortable"
+                class="border-sm"
             >
-                <v-btn value="my" class="px-4 text-none">My availability</v-btn>
+                <v-btn value="my" class="px-6 text-none font-weight-medium">My availability</v-btn>
             </v-btn-toggle>
-             <v-btn color="black" prepend-icon="mdi-plus" rounded="lg" @click="createNew" class="text-none">
-                New
+            -->
+             <v-btn 
+                color="black" 
+                prepend-icon="mdi-plus" 
+                rounded="xl" 
+                height="44"
+                elevation="0"
+                @click="createNew" 
+                class="text-none px-6 font-weight-bold"
+            >
+                New Schedule
             </v-btn>
         </div>
     </div>
 
-    <v-card variant="flat" class="bg-transparent">
-        <v-list class="bg-transparent pa-0">
-             <v-card 
+    <v-row>
+        <v-col cols="12">
+            <div v-if="store.schedules.length === 0" class="text-center py-12 text-grey">
+                <v-icon icon="mdi-calendar-clock" size="64" class="mb-4 text-grey-lighten-2"></v-icon>
+                <h3 class="text-h6 font-weight-medium">No schedules found</h3>
+                <p class="mb-6">Create a schedule to get started.</p>
+                <v-btn color="black" rounded="xl" @click="createNew" class="text-none">Create Schedule</v-btn>
+            </div>
+
+            <v-card 
                 v-for="schedule in store.schedules" 
                 :key="schedule.id"
-                class="mb-4 pa-6 rounded-xl border bg-white"
+                class="mb-4 rounded-xl border-sm transition-swing"
+                variant="outlined"
                 elevation="0"
-                @click="editSchedule(schedule.id)"
                 hover
-             >
-                <div class="d-flex justify-space-between align-start">
-                    <div class="w-100">
-                        <div class="d-flex align-center gap-2 mb-4">
-                            <h3 class="text-subtitle-1 font-weight-bold">{{ schedule.name }}</h3>
-                            <v-chip v-if="schedule.isDefault" size="small" color="grey-lighten-3" class="text-caption font-weight-bold text-grey-darken-3 rounded-pill px-2">Default</v-chip>
+                @click="editSchedule(schedule.id)"
+                style="border-color: #E0E0E0;"
+            >
+                <div class="pa-6 d-flex flex-column flex-sm-row gap-4 justify-space-between">
+                    <div class="d-flex flex-column gap-2 flex-grow-1">
+                        <div class="d-flex align-center flex-wrap gap-3 mb-1">
+                            <h3 class="text-h6 font-weight-bold text-grey-darken-4">{{ schedule.name }}</h3>
+                            <v-chip 
+                                v-if="schedule.isDefault" 
+                                size="small" 
+                                color="success" 
+                                variant="tonal"
+                                class="font-weight-bold px-3"
+                            >
+                                Default
+                            </v-chip>
                         </div>
                         
-                        <div class="mb-4">
-                            <div v-for="(line, index) in getFormattedSchedule(schedule.weekly)" :key="index" class="text-body-2 text-grey-darken-1 mb-1">
-                                {{ line }}
-                            </div>
+                        <div class="d-flex align-center text-body-2 text-grey-darken-1 mb-4">
+                            <v-icon icon="mdi-earth" size="small" class="mr-2"></v-icon>
+                            {{ schedule.timezone }}
                         </div>
 
-                         <div class="d-flex align-center mt-2 text-caption text-grey">
-                            <v-icon icon="mdi-earth" size="small" class="mr-1"></v-icon>
-                            {{ schedule.timezone }}
+                         <div class="d-flex flex-column gap-1">
+                            <div v-for="(line, index) in getFormattedSchedule(schedule.weekly)" :key="index" class="d-flex align-center text-body-2">
+                                <v-icon icon="mdi-clock-outline" size="16" class="mr-3 text-grey-lighten-1"></v-icon>
+                                <span class="text-grey-darken-3">{{ line }}</span>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="d-flex">
-                        <v-menu>
+                    <div class="d-flex align-start justify-end">
+                        <v-btn 
+                            icon="mdi-pencil-outline" 
+                            variant="text" 
+                            color="grey-darken-1" 
+                            class="mr-1"
+                            @click.stop="editSchedule(schedule.id)"
+                        >
+                             <v-tooltip activator="parent" location="top">Edit</v-tooltip>
+                        </v-btn>
+                        
+                        <v-menu location="bottom end">
                             <template v-slot:activator="{ props }">
-                                <v-btn icon="mdi-dots-horizontal" variant="text" density="comfortable" color="grey-darken-1" v-bind="props" @click.stop></v-btn>
+                                <v-btn icon="mdi-dots-vertical" variant="text" color="grey-darken-1" v-bind="props" @click.stop></v-btn>
                             </template>
-                            <v-list density="compact" rounded="lg" elevation="2">
+                            <v-list density="comfortable" rounded="lg" elevation="3" width="200">
                                 <v-list-item 
                                     prepend-icon="mdi-pencil" 
                                     title="Edit" 
                                     @click="editSchedule(schedule.id)"
                                 ></v-list-item>
                                 <v-list-item 
-                                    prepend-icon="mdi-star-outline" 
+                                    prepend-icon="mdi-check-circle-outline" 
                                     title="Set as default" 
                                     @click.stop="store.setDefault(schedule.id)"
                                     v-if="!schedule.isDefault"
                                 ></v-list-item>
+                                <v-divider class="my-1"></v-divider>
                                 <v-list-item 
                                     prepend-icon="mdi-delete-outline" 
                                     title="Delete" 
-                                    color="error"
+                                    class="text-error"
                                     @click.stop="deleteSchedule(schedule.id)"
                                     v-if="!schedule.isDefault"
                                 ></v-list-item>
@@ -167,10 +208,9 @@ const deleteSchedule = (id: string) => {
                         </v-menu>
                     </div>
                 </div>
-             </v-card>
-        </v-list>
-    </v-card>
-    
+            </v-card>
+        </v-col>
+    </v-row>
   </v-container>
 </template>
 
