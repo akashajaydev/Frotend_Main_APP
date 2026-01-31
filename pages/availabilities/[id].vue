@@ -19,22 +19,38 @@ const isUnavailableOverride = ref(false)
 
 onMounted(() => {
     const id = route.params.id as string
-    const s = store.getScheduleById(id)
-    if (!s) {
-        router.push('/availabilities')
-        return
+    
+    if (id === 'new') {
+        schedule.value = store.getNewSchedule()
+    } else {
+        const s = store.getScheduleById(id)
+        if (!s) {
+            router.push('/availabilities')
+            return
+        }
+        // Deep copy to avoid mutating store directly without action
+        schedule.value = JSON.parse(JSON.stringify(s))
     }
-    // Deep copy to avoid mutating store directly without action (though Pinia allows it, better to be explicit or reactive refs)
-    // For simplicity, we'll bind directly to store object but in real app might want draft state
-    schedule.value = s
 })
 
 const save = () => {
-    store.updateSchedule(schedule.value.id, schedule.value)
-    // Maybe show snackbar
+    if (route.params.id === 'new') {
+        store.addSchedule(schedule.value)
+    } else {
+        store.updateSchedule(schedule.value.id, schedule.value)
+    }
+    if (schedule.value.isDefault) {
+        store.setDefault(schedule.value.id)
+    }
+    router.push('/availabilities')
 }
 
 const deleteSchedule = () => {
+    if (route.params.id === 'new') {
+        router.push('/availabilities')
+        return
+    }
+
     if(confirm('Delete this schedule?')) {
         store.deleteSchedule(schedule.value.id)
         router.push('/availabilities')
@@ -156,12 +172,11 @@ const formatTime = (time: string) => {
                     hide-details
                     density="compact"
                     inset
-                    @change="store.setDefault(schedule.id)"
                 ></v-switch>
              </div>
              <v-divider vertical class="mx-2"></v-divider>
              <v-btn variant="outlined" color="error" class="mr-2" icon="mdi-delete-outline" rounded="lg" @click="deleteSchedule"></v-btn>
-             <v-btn color="black" rounded="lg" @click="router.back()">Save</v-btn>
+             <v-btn color="black" rounded="lg" @click="save">Save</v-btn>
         </div>
     </div>
 

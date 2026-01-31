@@ -42,8 +42,7 @@ const formatTime = (time: string) => {
 }
 
 const createNew = () => {
-    const id = store.createSchedule()
-    router.push(`/availabilities/${id}`)
+    router.push('/availabilities/new')
 }
 
 const editSchedule = (id: string) => {

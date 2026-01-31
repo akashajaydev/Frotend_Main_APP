@@ -57,8 +57,9 @@ export const useAvailabilityStore = defineStore('availability', {
     }),
 
     actions: {
-        createSchedule() {
-            const newSchedule: Schedule = {
+        // Returns a new schedule object WITHOUT adding it to the store
+        getNewSchedule(): Schedule {
+            return {
                 id: generateId(),
                 name: 'New Schedule',
                 isDefault: false,
@@ -66,7 +67,15 @@ export const useAvailabilityStore = defineStore('availability', {
                 weekly: defaultWeeklySchedule(),
                 overrides: {}
             }
-            this.schedules.push(newSchedule)
+        },
+
+        addSchedule(schedule: Schedule) {
+            this.schedules.push(schedule)
+        },
+
+        createSchedule() {
+            const newSchedule = this.getNewSchedule()
+            this.addSchedule(newSchedule)
             return newSchedule.id
         },
 
