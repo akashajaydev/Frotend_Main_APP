@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { useAvailabilityStore } from '~/stores/availability'
 import { useRouter } from 'vue-router'
+import { onMounted } from 'vue'
 
 const store = useAvailabilityStore()
 const router = useRouter()
+
+onMounted(() => {
+    store.fetchAvailability()
+})
 
 const formatTime = (time: string) => {
     if (!time) return ''
