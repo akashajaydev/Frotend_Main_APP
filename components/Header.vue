@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { useUIStore } from '~/stores/ui'
+import { useAuthStore } from '@/stores/auth'
 import adminAvatar from '~/assets/images/admin.png'
 import siteLogo from '~/assets/images/logo.png'
 
 const data = useDataStore()
 const ui = useUIStore()
+const authStore = useAuthStore()
 const route = useRoute()
 
 onMounted(() => {
@@ -49,7 +51,7 @@ function goto(path: string) {
 							@click="goto('/profile')" active-color="primary" />
 						<v-divider class="my-1"></v-divider>
 						<v-list-item prepend-icon="mdi-logout" title="Logout" value="logout"
-							@click="helpers.logout" color="error" />
+							@click="authStore.logout" color="error" />
 					</v-list>
 				</v-menu>
 			</template>
