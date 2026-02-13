@@ -107,12 +107,12 @@ function getStatusColor(status: string) {
                 :search="search"
                 :loading="ordersStore.isLoading"
                 hover
-                class="pa-2"
+                class="pa-2 elevation"
                 @update:options="loadItems"
             >
                 <!-- Custom Slot for S.No -->
                 <template v-slot:item.sno="{ index }">
-                    <span class="text-grey-darken-1 font-weight-medium">
+                    <span class="text-grey-darken-5 font-weight-medium">
                         {{ (page - 1) * itemsPerPage + index + 1 }}
                     </span>
                 </template>
@@ -146,17 +146,17 @@ function getStatusColor(status: string) {
 
                 <!-- Custom Slot for Amount -->
                 <template v-slot:item.amount="{ item }">
-                    <span class="font-weight-bold text-grey-darken-2">{{ formatCurrency(item.amount, item.currency) }}</span>
+                    <span class="font-weight-bold text-grey-darken-5">{{ formatCurrency(item.amount, item.currency) }}</span>
                 </template>
 
                  <!-- Custom Slot for Order ID -->
                  <template v-slot:item.id="{ item }">
-                    <span class="font-weight-medium text-primary">#{{ item._id.slice(-6).toUpperCase() }}</span>
+                    <span class="font-weight-medium text-grey-darken-6">#{{ item._id.slice(-6).toUpperCase() }}</span>
                 </template>
 
                 <!-- Custom Slot for Date -->
                 <template v-slot:item.date="{ item }">
-                    {{ formatDate(item.date) }}
+                    <span class="font-weight-medium text-grey-darken-5">{{ formatDate(item.date) }}</span>
                 </template>
 
             </v-data-table-server>
@@ -167,5 +167,8 @@ function getStatusColor(status: string) {
 <style scoped>
 .v-container {
     font-family: 'Montserrat', sans-serif;
+}
+.elevation{
+    background-color: rgb(232, 233, 237);
 }
 </style>

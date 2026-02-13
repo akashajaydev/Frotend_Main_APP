@@ -96,31 +96,30 @@ export const useOrdersStore = defineStore('orders', {
         },
 
         async fetchOrderById(id: string) {
-            // First check if the order is already in the list
             const existingOrder = this.orders.find(o => o._id === id)
             if (existingOrder) {
                 this.currentOrder = existingOrder
-                return existingOrder
             }
 
             this.isLoading = true
             try {
-                // Try fetching specific order if endpoint exists, otherwise we might need to rely on the list
-                // Since user didn't provide specific ID endpoint, I'll assume /admin/orders/:id might work or I filtered from list if permitted
-                // But for now, let's try to fetch the list and find it if API doesn't support direct ID fetch yet
-                // OR, let's assume standard REST pattern /admin/orders/:id exists.
-                // If it fails, I'll have to fetch the list and filter (which is inefficient but valid fallback).
-                // Actually, let's try to fetch all or a large list if needed? No, that's bad.
-                // usage: /api/admin/orders/:id
-                const { ok, json } = await helpers.apiCall(`/admin/orders/${id}`)
-                if (ok) {
-                    this.currentOrder = json
-                    return json
-                } else {
-                    // Fallback or error
-                    useSnackStore().error('Failed to fetch order details')
-                    return null
+                // The direct ID endpoint /admin/orders/:id is not allowing GET (405)
+                // So we fallback to searching the list.
+                const { ok, json } = await helpers.apiCall(`/admin/orders?limit=1&page=1&search=${id}`)
+
+                if (ok && json.orders && json.orders.length > 0) {
+                    // Find exact match just in case search is fuzzy
+                    const match = json.orders.find((o: Order) => o._id === id)
+
+                    if (match) {
+                        this.currentOrder = match
+                        return match
+                    }
                 }
+
+                if (existingOrder) return existingOrder
+                useSnackStore().error('Order not found')
+                return null
             } catch (error) {
                 console.error('Error fetching order:', error)
                 useSnackStore().error('An error occurred while fetching order details')
@@ -128,6 +127,91 @@ export const useOrdersStore = defineStore('orders', {
             } finally {
                 this.isLoading = false
             }
+        },
+
+        async fetchCheckoutSessions(email: string, limit: number = 20, starting_after?: string) {
+            const query = new URLSearchParams({ email, limit: limit.toString() })
+            if (starting_after) query.append('starting_after', starting_after)
+
+            return await helpers.apiCall(`/admin/orders/checkout-sessions?${query.toString()}`)
+        },
+
+        async completePayment(id: string) {
+            const { ok, json } = await helpers.apiCall(`/admin/orders/${id}/complete-payment`, { method: 'POST' })
+            if (ok) {
+                useSnackStore().success(json.message)
+                await this.fetchOrderById(id)
+            } else {
+                useSnackStore().error(json.message || 'Failed to complete payment')
+            }
+            return ok
+        },
+
+        async failPayment(id: string) {
+            const { ok, json } = await helpers.apiCall(`/admin/orders/${id}/fail-payment`, { method: 'POST' })
+            if (ok) {
+                useSnackStore().success(json.message)
+                await this.fetchOrderById(id)
+            } else {
+                useSnackStore().error(json.message || 'Failed to fail payment')
+            }
+            return ok
+        },
+
+        async refundOrder(id: string, refundAmount: number, comments: string) {
+            const { ok, json } = await helpers.apiCall(`/admin/orders/${id}/refund`, {
+                method: 'POST',
+                json: { refundAmount, comments }
+            })
+            if (ok) {
+                useSnackStore().success(json.message)
+                await this.fetchOrderById(id)
+            } else {
+                useSnackStore().error(json.message || 'Failed to refund order')
+            }
+            return ok
+        },
+
+        async scheduleOrder(id: string, schedule: string) {
+            const { ok, json } = await helpers.apiCall(`/admin/orders/${id}/schedule`, {
+                method: 'POST',
+                json: { schedule }
+            })
+            if (ok) {
+                useSnackStore().success(json.message)
+                await this.fetchOrderById(id)
+            } else {
+                useSnackStore().error(json.message || 'Failed to schedule order')
+            }
+            return ok
+        },
+
+        async appointAdmin(id: string, adminId: string, comments: string) {
+            const { ok, json } = await helpers.apiCall(`/admin/orders/${id}/appoint-admin`, {
+                method: 'POST',
+                json: { admin: adminId, comments }
+            })
+            if (ok) {
+                useSnackStore().success(json.message)
+                await this.fetchOrderById(id)
+            } else {
+                useSnackStore().error(json.message || 'Failed to appoint admin')
+            }
+            return ok
+        },
+
+        async completeOrder(id: string, finalComments: string) {
+            const { ok, json } = await helpers.apiCall(`/admin/orders/${id}/complete`, {
+                method: 'POST',
+                json: { finalComments }
+            })
+            if (ok) {
+                useSnackStore().success(json.message)
+                await this.fetchOrderById(id)
+            } else {
+                useSnackStore().error(json.message || 'Failed to complete order')
+            }
+            return ok
         }
     }
 })
