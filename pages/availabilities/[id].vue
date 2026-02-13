@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAvailabilityStore } from '~/stores/availability'
+import { useAvailabilityStore, type Schedule } from '~/stores/availability'
 import { useRoute, useRouter } from 'vue-router'
 import { ref, computed, onMounted } from 'vue'
 
@@ -7,8 +7,8 @@ const store = useAvailabilityStore()
 const route = useRoute()
 const router = useRouter()
 
-const schedule = ref<any>(null)
-const dayMapping = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+const schedule = ref<Schedule | null>(null)
+const dayMapping: (keyof Schedule['weekly'])[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 const validTimezones = Intl.supportedValuesOf('timeZone')
 
 // Date Override State
@@ -17,13 +17,22 @@ const selectedOverrideDate = ref<any>(null) // For the date picker
 const selectedOverrideRanges = ref<any[]>([]) 
 const isUnavailableOverride = ref(false)
 
-onMounted(() => {
+onMounted(async () => {
     const id = route.params.id as string
     
     if (id === 'new') {
         schedule.value = store.getNewSchedule()
     } else {
-        const s = store.getScheduleById(id)
+        // If it's a UUID or 'common', we should probably fetch to be sure we have latest, 
+        // but store actions might have already fetched. 
+        // For 'common', if not in store, we might need to fetch.
+        // But for now relying on store state is consistent with other pages.
+        let s = store.getScheduleById(id)
+        if (!s && id === 'common') {
+             await store.fetchAvailability()
+             s = store.getScheduleById(id)
+        }
+        
         if (!s) {
             router.push('/availabilities')
             return
@@ -33,11 +42,12 @@ onMounted(() => {
     }
 })
 
-const save = () => {
+const save = async () => {
+    if (!schedule.value) return
     if (route.params.id === 'new') {
         store.addSchedule(schedule.value)
     } else {
-        store.updateSchedule(schedule.value.id, schedule.value)
+        await store.updateSchedule(schedule.value.id, schedule.value)
     }
     if (schedule.value.isDefault) {
         store.setDefault(schedule.value.id)
@@ -46,6 +56,7 @@ const save = () => {
 }
 
 const deleteSchedule = () => {
+    if (!schedule.value) return
     if (route.params.id === 'new') {
         router.push('/availabilities')
         return
@@ -58,10 +69,12 @@ const deleteSchedule = () => {
 }
 
 const setAsDefault = () => {
+    if (!schedule.value) return
     store.setDefault(schedule.value.id)
 }
 
-const addTimeRange = (day: string) => {
+const addTimeRange = (day: keyof Schedule['weekly']) => {
+    if (!schedule.value) return
     schedule.value.weekly[day].ranges.push({
         id: Math.random().toString(36).substring(7),
         start: '09:00',
@@ -69,19 +82,33 @@ const addTimeRange = (day: string) => {
     })
 }
 
-const removeTimeRange = (day: string, index: number) => {
+const removeTimeRange = (day: keyof Schedule['weekly'], index: number) => {
+    if (!schedule.value) return
     schedule.value.weekly[day].ranges.splice(index, 1)
 }
 
-const copyToAllDays = (sourceDay: string) => {
+const copyToAllDays = (sourceDay: keyof Schedule['weekly']) => {
+    if (!schedule.value) return
     const sourceRanges = schedule.value.weekly[sourceDay].ranges
     dayMapping.forEach(d => {
-        if (d !== sourceDay) {
+        if (d !== sourceDay && schedule.value) { // Check schedule.value again for narrowing
             schedule.value.weekly[d].active = true
             // Deep copy ranges
             schedule.value.weekly[d].ranges = JSON.parse(JSON.stringify(sourceRanges))
         }
     })
+}
+
+const onDayActiveChange = (day: keyof Schedule['weekly'], isActive: any) => {
+    if (!schedule.value) return
+    // isActive can be boolean or null depending on vuetify version specifics, cast to boolean
+    if (isActive && schedule.value.weekly[day].ranges.length === 0) {
+        schedule.value.weekly[day].ranges.push({
+            id: Math.random().toString(36).substring(7),
+            start: '09:00',
+            end: '17:00'
+        })
+    }
 }
 
 // Override Logic
@@ -98,7 +125,7 @@ const addOverride = () => {
 }
 
 const saveOverride = () => {
-    if (!selectedOverrideDate.value) return
+    if (!selectedOverrideDate.value || !schedule.value) return
     
     // selectedOverrideDate might be a Date object or string depending on picker
     // Vuetify 3 date picker usually returns Date object or ISO string. Let's handle both.
@@ -122,6 +149,7 @@ const saveOverride = () => {
 }
 
 const deleteOverride = (date: string) => {
+    if (!schedule.value) return
     delete schedule.value.overrides[date]
 }
 
@@ -175,7 +203,7 @@ const formatTime = (time: string) => {
                 ></v-switch>
              </div>
              <v-divider vertical class="mx-2"></v-divider>
-             <v-btn variant="outlined" color="error" class="mr-2" icon="mdi-delete-outline" rounded="lg" @click="deleteSchedule"></v-btn>
+             <v-btn variant="outlined" color="error" class="mr-2" icon="mdi-delete-outline" rounded="lg" @click="deleteSchedule" v-if="!schedule.isDefault"></v-btn>
              <v-btn color="black" rounded="lg" @click="save">Save</v-btn>
         </div>
     </div>
@@ -193,6 +221,7 @@ const formatTime = (time: string) => {
                             <div class="d-flex align-center" style="width: 180px;">
                                 <v-switch
                                     v-model="schedule.weekly[day].active"
+                                    @update:model-value="onDayActiveChange(day, $event)"
                                     color="primary"
                                     hide-details
                                     density="compact"
@@ -262,7 +291,7 @@ const formatTime = (time: string) => {
                             <div class="text-caption text-grey">
                                 <span v-if="schedule.overrides[date] === null">Unavailable</span>
                                 <span v-else>
-                                    {{ schedule.overrides[date].map(r => `${formatTime(r.start)} - ${formatTime(r.end)}`).join(', ') }}
+                                    {{ schedule.overrides[date].map((r: any) => `${formatTime(r.start)} - ${formatTime(r.end)}`).join(', ') }}
                                 </span>
                             </div>
                         </div>

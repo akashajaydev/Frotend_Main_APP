@@ -1,22 +1,23 @@
 import { defineStore } from 'pinia'
-import { v4 as uuidv4 } from 'uuid' // We'll need a simple ID generator or we can use a helper if available. Check package.json for uuid, or just use Math.random/Date for now if no uuid lib.
+import helpers from '~/utils/helpers'
 
-// Checking package.json... I don't recall seeing 'uuid'. I'll use a simple helper function.
 const generateId = () => Math.random().toString(36).substring(2, 9)
 
 export interface TimeRange {
-    id: string
+    id?: string
     start: string // "HH:mm"
     end: string   // "HH:mm"
+    _id?: string
 }
 
 export interface DaySchedule {
     active: boolean
     ranges: TimeRange[]
+    _id?: string
 }
 
 export interface Schedule {
-    id: string
+    id: string // 'common' or uuid
     name: string
     isDefault: boolean
     timezone: string
@@ -29,9 +30,10 @@ export interface Schedule {
         saturday: DaySchedule
         sunday: DaySchedule
     }
-    overrides: Record<string, TimeRange[] | null> // date "YYYY-MM-DD" -> ranges or null (unavailable)
+    overrides: Record<string, TimeRange[] | null>
 }
 
+// Check if Schedule has all required properties
 const defaultWeeklySchedule = (): Schedule['weekly'] => ({
     monday: { active: true, ranges: [{ id: generateId(), start: '09:00', end: '17:00' }] },
     tuesday: { active: true, ranges: [{ id: generateId(), start: '09:00', end: '17:00' }] },
@@ -44,16 +46,8 @@ const defaultWeeklySchedule = (): Schedule['weekly'] => ({
 
 export const useAvailabilityStore = defineStore('availability', {
     state: () => ({
-        schedules: [
-            {
-                id: 'default',
-                name: 'Working Hours',
-                isDefault: true,
-                timezone: 'America/New_York', // Example default
-                weekly: defaultWeeklySchedule(),
-                overrides: {}
-            }
-        ] as Schedule[]
+        schedules: [] as Schedule[],
+        loading: false
     }),
 
     actions: {
@@ -79,15 +73,51 @@ export const useAvailabilityStore = defineStore('availability', {
             return newSchedule.id
         },
 
-        updateSchedule(id: string, updates: Partial<Schedule>) {
+        async updateSchedule(id: string, updates: Partial<Schedule>) {
             const index = this.schedules.findIndex(s => s.id === id)
             if (index !== -1) {
+                // If it's the common schedule, sync with API
+                if (id === 'common') {
+                    const updatedSchedule = { ...this.schedules[index], ...updates }
+
+                    // Transform back to API format
+                    const apiPayload: any = {}
+
+                    if (updates.timezone) apiPayload.timezone = updates.timezone
+
+                    if (updates.weekly) {
+                        apiPayload.workingHours = Object.entries(updatedSchedule.weekly).map(([day, schedule]: [string, any]) => ({
+                            day,
+                            enabled: schedule.active,
+                            hoursRange: schedule.ranges.map((r: any) => ({
+                                start: r.start,
+                                end: r.end
+                            }))
+                        }))
+                    }
+
+                    // Only call API if there are relevant changes
+                    if (Object.keys(apiPayload).length > 0) {
+                        try {
+                            const { ok } = await helpers.apiCall('/admin/misc', {
+                                method: 'PATCH',
+                                json: apiPayload
+                            })
+                            if (!ok) throw new Error('Failed to update availabilities')
+                        } catch (e) {
+                            console.error(e)
+                            // Optionally revert state or show error
+                            return
+                        }
+                    }
+                }
+
                 this.schedules[index] = { ...this.schedules[index], ...updates }
             }
         },
 
         deleteSchedule(id: string) {
-            if (id === 'default') return // Prevent deleting default for now if it's the only one
+            if (id === 'common') return // Cannot delete the main schedule
             this.schedules = this.schedules.filter(s => s.id !== id)
         },
 
@@ -99,6 +129,53 @@ export const useAvailabilityStore = defineStore('availability', {
             this.schedules.forEach(s => {
                 s.isDefault = (s.id === id)
             })
+        },
+
+        async fetchAvailability() {
+            this.loading = true
+            try {
+                const { ok, json } = await helpers.apiCall('/admin/misc')
+                if (ok && json.misc) {
+                    const misc = json.misc
+
+                    // Transform API response to Store Schedule format
+                    const weekly: any = { ...defaultWeeklySchedule() }
+
+                    if (misc.workingHours && Array.isArray(misc.workingHours)) {
+                        misc.workingHours.forEach((wh: any) => {
+                            if (weekly[wh.day]) {
+                                weekly[wh.day].active = wh.enabled ?? true
+                                weekly[wh.day].ranges = (wh.hoursRange || []).map((r: any) => ({
+                                    id: r._id || generateId(),
+                                    start: r.start,
+                                    end: r.end
+                                }))
+                            }
+                        })
+                    }
+
+                    const commonSchedule: Schedule = {
+                        id: 'common',
+                        name: 'Working Hours',
+                        isDefault: true,
+                        timezone: misc.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        weekly: weekly,
+                        overrides: {} // API doesn't seem to have overrides yet, keeping empty
+                    }
+
+                    // Check if common schedule exists, update or push
+                    const existingIndex = this.schedules.findIndex(s => s.id === 'common')
+                    if (existingIndex !== -1) {
+                        this.schedules[existingIndex] = commonSchedule
+                    } else {
+                        this.schedules.unshift(commonSchedule)
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to fetch availabilities', e)
+            } finally {
+                this.loading = false
+            }
         }
     }
 })

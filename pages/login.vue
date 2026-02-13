@@ -1,4 +1,6 @@
 <script setup>
+import { useAuthStore } from '@/stores/auth'
+
 definePageMeta({
   layout: false
 })
@@ -10,10 +12,32 @@ useHead({
 })
 
 const isSignUp = ref(false)
+const authStore = useAuthStore()
+const email = ref('')
+const password = ref('')
 
+// Keep handleAuth for SignUp if needed, or just for legacy
 const handleAuth = () => {
   localStorage.setItem('admin-token', 'dummy-token')
   navigateTo('/')
+}
+
+const handleLogin = async () => {
+  if (!email.value || !password.value) {
+    alert('Please enter email and password')
+    return
+  }
+  
+  const success = await authStore.login({
+    email: email.value,
+    password: password.value
+  })
+
+  if (success) {
+    navigateTo('/')
+  } else {
+    alert(authStore.error || 'Login failed')
+  }
 }
 </script>
 
@@ -37,7 +61,7 @@ const handleAuth = () => {
         </form>
       </div>
       <div class="form-container sign-in">
-        <form @submit.prevent="handleAuth">
+        <form @submit.prevent="handleLogin">
           <h1>Sign In</h1>
           <div class="social-icons">
             <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
@@ -46,10 +70,10 @@ const handleAuth = () => {
             <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
           </div>
           <span>or use your email password</span>
-          <input type="email" placeholder="Email">
-          <input type="password" placeholder="Password">
+          <input type="email" placeholder="Email" v-model="email">
+          <input type="password" placeholder="Password" v-model="password">
           <NuxtLink to="/forgot-password">Forget Your Password?</NuxtLink>
-          <button>Sign In</button>
+          <button :disabled="authStore.loading">{{ authStore.loading ? 'Signing In...' : 'Sign In' }}</button>
         </form>
       </div>
       <div class="toggle-container">
