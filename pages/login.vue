@@ -19,7 +19,7 @@ const password = ref('')
 // Keep handleAuth for SignUp if needed, or just for legacy
 const handleAuth = () => {
   localStorage.setItem('admin-token', 'dummy-token')
-  navigateTo('/')
+  navigateTo('/admins')
 }
 
 const handleLogin = async () => {
@@ -34,7 +34,7 @@ const handleLogin = async () => {
   })
 
   if (success) {
-    navigateTo('/')
+    navigateTo('/admins')
   } else {
     alert(authStore.error || 'Login failed')
   }
