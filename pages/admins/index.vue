@@ -1,10 +1,17 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useAdminsStore } from '~/stores/admins'
+import { useDataStore } from '~/stores/data'
+import { useConfirmStore } from '~/stores/confirm'
 
 const adminsStore = useAdminsStore()
+const dataStore = useDataStore()
+const confirm = useConfirmStore()
+
 const search = ref('')
 const createDialog = ref(false)
+const isEdit = ref(false)
+const editId = ref('')
 
 const newAdmin = ref({
   name: '',
@@ -30,7 +37,7 @@ const headers = [
 
 // Helper for Role styling
 const getRoleTheme = (role: string) => {
-  // Normalize role string just in case
+  if (!role) return { color: 'grey', icon: 'mdi-account', label: 'Unknown' }
   const r = role.toLowerCase()
   if (r.includes('baba')) return { color: 'orange-darken-2', icon: 'mdi-om', label: 'Baba' }
   if (r.includes('astrologer')) return { color: 'deep-purple-lighten-1', icon: 'mdi-star-four-points', label: 'Astrologer' }
@@ -44,40 +51,59 @@ onMounted(() => {
 
 const admins = computed(() => adminsStore.admins)
 const loading = computed(() => adminsStore.loading)
+const isSuperAdmin = computed(() => dataStore.admin?.role === 'super-admin')
 
-async function createAdmin() {
-    if (!newAdmin.value.name || !newAdmin.value.email || !newAdmin.value.password) {
-        // Basic client-side validation could be improved
-        alert('Please fill in all required fields')
+async function saveAdmin() {
+    if (!newAdmin.value.name || !newAdmin.value.email) {
+        alert('Please fill in name and email')
+        return
+    }
+    
+    if (!isEdit.value && !newAdmin.value.password) {
+        alert('Password is required for new admins')
         return
     }
 
-    const payload = {
+    const payload: any = {
         name: newAdmin.value.name,
         email: newAdmin.value.email,
         phone: newAdmin.value.phone,
-        password: newAdmin.value.password,
         role: newAdmin.value.role
     }
 
-    const result = await adminsStore.createAdmin(payload)
+    if (newAdmin.value.password) {
+        payload.password = newAdmin.value.password
+    }
+
+    let result
+    if (isEdit.value) {
+        result = await adminsStore.updateAdmin(editId.value, payload)
+    } else {
+        result = await adminsStore.createAdmin(payload)
+    }
     
     if (result.success) {
         createDialog.value = false
-        // Reset form
-        newAdmin.value = { 
-            name: '', 
-            email: '', 
-            phone: '', 
-            role: 'admin:baba', 
-            password: '' 
-        }
+        resetForm()
     } else {
         alert(result.message)
     }
 }
 
+function resetForm() {
+    newAdmin.value = { 
+        name: '', 
+        email: '', 
+        phone: '', 
+        role: 'admin:baba', 
+        password: '' 
+    }
+    isEdit.value = false
+    editId.value = ''
+}
+
 function openCreateDialog() {
+  resetForm()
   createDialog.value = true
 }
 
@@ -87,13 +113,31 @@ function viewAdmin(item: any) {
 }
 
 function editAdmin(item: any) {
-  // Logic to edit
-  console.log('Edit', item)
+  newAdmin.value = {
+      name: item.name,
+      email: item.email,
+      phone: item.phone,
+      role: item.role,
+      password: '' // Keep empty, only send if changed
+  }
+  editId.value = item._id
+  isEdit.value = true
+  createDialog.value = true
 }
 
 function deleteAdmin(item: any) {
-  // Logic to delete
-  console.log('Delete', item)
+    if (!item._id) return;
+    
+    confirm.show(
+        'Delete Admin',
+        `Are you sure you want to delete ${item.name}? This action cannot be undone.`,
+        async () => {
+             const result = await adminsStore.deleteAdmin(item._id)
+             if (!result.success) {
+                 alert(result.message)
+             }
+        }
+    )
 }
 
 function formatDate(dateString: string) {
@@ -135,6 +179,7 @@ function formatDate(dateString: string) {
             style="width: 300px; max-width: 100%;"
         ></v-text-field>
         <v-btn
+            v-if="isSuperAdmin"
             color="primary"
             prepend-icon="mdi-plus"
             rounded="xl"
@@ -197,7 +242,7 @@ function formatDate(dateString: string) {
 
         <!-- Actions Slot -->
         <template v-slot:item.actions="{ item }">
-            <div class="d-flex justify-end">
+            <div class="d-flex justify-end" v-if="isSuperAdmin">
                 <v-btn icon size="small" variant="text" color="grey" @click="viewAdmin(item)">
                     <v-icon>mdi-eye-outline</v-icon>
                     <v-tooltip activator="parent" location="top">View</v-tooltip>
@@ -215,12 +260,12 @@ function formatDate(dateString: string) {
       </v-data-table>
     </v-card>
 
-    <!-- Create Admin Dialog -->
+    <!-- Create/Edit Admin Dialog -->
     <v-dialog v-model="createDialog" max-width="500px">
       <v-card rounded="xl" class="pa-4">
-        <v-card-title class="text-h5 font-weight-bold text-center">Create New Admin</v-card-title>
+        <v-card-title class="text-h5 font-weight-bold text-center">{{ isEdit ? 'Edit Admin' : 'Create New Admin' }}</v-card-title>
         <v-card-text class="mt-4">
-          <v-form @submit.prevent="createAdmin">
+          <v-form @submit.prevent="saveAdmin">
             <v-text-field
               v-model="newAdmin.name"
               label="Full Name"
@@ -260,7 +305,7 @@ function formatDate(dateString: string) {
             ></v-select>
              <v-text-field
               v-model="newAdmin.password"
-              label="Password"
+              :label="isEdit ? 'Password (leave blank to keep current)' : 'Password'"
               prepend-inner-icon="mdi-lock"
               type="password"
               variant="outlined"
@@ -277,10 +322,10 @@ function formatDate(dateString: string) {
             rounded="lg"
             class="px-8 font-weight-bold"
             elevation="2"
-            @click="createAdmin"
+            @click="saveAdmin"
             :loading="loading"
           >
-            Create
+            {{ isEdit ? 'Update' : 'Create' }}
           </v-btn>
         </v-card-actions>
       </v-card>

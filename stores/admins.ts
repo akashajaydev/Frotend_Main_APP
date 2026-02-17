@@ -43,6 +43,47 @@ export const useAdminsStore = defineStore('admins', {
                 this.error = response.json.message || 'Failed to create admin'
                 return { success: false, message: this.error }
             }
+        },
+
+        async updateAdmin(id: string, payload: any) {
+            this.loading = true;
+            this.error = null;
+
+            // API: PATCH /admin/:id
+            const response = await helpers.apiCall(`/admin/${id}`, {
+                method: 'PATCH',
+                json: payload
+            });
+
+            this.loading = false;
+
+            if (response.ok) {
+                await this.fetchAdmins(); // Refresh list
+                return { success: true, message: response.json.message };
+            } else {
+                this.error = response.json.message || 'Failed to update admin';
+                return { success: false, message: this.error };
+            }
+        },
+
+        async deleteAdmin(id: string) {
+            this.loading = true;
+            this.error = null;
+
+            // API: DELETE /admin/:id
+            const response = await helpers.apiCall(`/admin/${id}`, {
+                method: 'DELETE'
+            });
+
+            this.loading = false;
+
+            if (response.ok) {
+                await this.fetchAdmins(); // Refresh list
+                return { success: true, message: response.json.message };
+            } else {
+                this.error = response.json.message || 'Failed to delete admin';
+                return { success: false, message: this.error };
+            }
         }
     }
 })
